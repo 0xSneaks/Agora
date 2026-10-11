@@ -28,11 +28,11 @@ android {
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
-        applicationId = "com.newoether.agora"
+        applicationId = "com.sneaks.agora.dev"
         minSdk = 26
         targetSdk = 36
         versionCode = 31
-        versionName = "2.1.0"
+        versionName = "2.1.0-webui-dev"
 
 
         ndk {
