@@ -1,0 +1,186 @@
+name: Verify Agora Dev APK
+
+# Builds the exact pinned commit and verifies the APK. Verify-only:
+# never touches muse/agora-dev-webui or master; writes its report to this branch.
+on:
+  push:
+    branches: [ci/agora-dev-verify]
+    paths: [.github/workflows/verify-agora-dev.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PINNED_SHA: 95c1606b9e9598902c58270a839be9a26856f26c
+
+jobs:
+  build-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout pinned source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PINNED_SHA }}
+          submodules: recursive
+          path: src
+
+      - name: Confirm SHA
+        working-directory: src
+        run: |
+          head=$(git rev-parse HEAD)
+          echo "HEAD=$head"
+          [ "$head" = "$PINNED_SHA" ] || { echo "SHA mismatch"; exit 1; }
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools build-tools;35.0.0 ndk;28.2.13676358"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build PRoot runtime
+        working-directory: src
+        run: |
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/28.2.13676358"
+          chmod +x ./build-proot.sh
+          ./build-proot.sh 2>&1 | tee "$RUNNER_TEMP/proot.log"
+
+      - name: Unit tests
+        working-directory: src
+        run: |
+          chmod +x ./gradlew
+          set +e
+          ./gradlew :app:testFdroidDebugUnitTest --no-daemon --max-workers=1 > "$RUNNER_TEMP/test.log" 2>&1
+          echo $? > "$RUNNER_TEMP/test.rc"
+          tail -40 "$RUNNER_TEMP/test.log"
+
+      - name: Assemble F-Droid release
+        working-directory: src
+        run: |
+          set +e
+          ./gradlew :app:assembleFdroidRelease --no-daemon > "$RUNNER_TEMP/build.log" 2>&1
+          echo $? > "$RUNNER_TEMP/build.rc"
+          tail -40 "$RUNNER_TEMP/build.log"
+
+      - name: Verify APK and write report
+        run: |
+          set -u
+          R="$GITHUB_WORKSPACE/report.md"
+          FAILS=0
+          row() { echo "| $1 | $2 | $3 |" >> "$R"; [ "$2" = PASS ] || FAILS=$((FAILS+1)); }
+
+          AAPT2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
+          cd "$GITHUB_WORKSPACE/src"
+          git status --porcelain --untracked-files=no > "$RUNNER_TEMP/dirty.txt"
+
+          # Test counts from JUnit XML
+          read T F E S <<< $(python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          t=f=e=s=0
+          for p in glob.glob('app/build/test-results/testFdroidDebugUnitTest/*.xml'):
+              r=ET.parse(p).getroot()
+              t+=int(r.get('tests',0)); f+=int(r.get('failures',0)); e+=int(r.get('errors',0)); s+=int(r.get('skipped',0))
+          print(t,f,e,s)
+          PY
+          )
+          FAILED_TESTS=$(grep -l -E '<failure|<error' app/build/test-results/testFdroidDebugUnitTest/*.xml 2>/dev/null | xargs -r -n1 basename | head -20 || true)
+
+          {
+            echo "# Agora Dev APK verification"
+            echo
+            echo "- Source SHA: \`$PINNED_SHA\`"
+            echo "- Workflow run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- Unit tests: total=$T failures=$F errors=$E skipped=$S (gradle rc=$(cat $RUNNER_TEMP/test.rc))"
+            echo "- Build rc: $(cat $RUNNER_TEMP/build.rc)"
+            echo "- Tracked files modified by build: $(wc -l < $RUNNER_TEMP/dirty.txt)"
+            echo
+            echo "| Check | Result | Detail |"
+            echo "|---|---|---|"
+          } > "$R"
+
+          [ "$(cat $RUNNER_TEMP/test.rc)" = 0 ] && [ "$F" = 0 ] && [ "$E" = 0 ] && [ "$T" -gt 0 ] \
+            && row "Unit tests pass" PASS "$T run, $((T-F-E-S)) passed, $S skipped" \
+            || row "Unit tests pass" FAIL "rc=$(cat $RUNNER_TEMP/test.rc) failures=$F errors=$E; files: $(echo $FAILED_TESTS | tr '\n' ' ')"
+
+          APK=$(ls app/build/outputs/apk/fdroid/release/*.apk 2>/dev/null | head -1 || true)
+          if [ -z "$APK" ]; then
+            row "APK built" FAIL "build rc=$(cat $RUNNER_TEMP/build.rc)"
+            { echo; echo '## Build log tail'; echo '```'; tail -60 "$RUNNER_TEMP/build.log"; echo '```'; } >> "$R"
+          else
+            SIZE=$(stat -c %s "$APK"); SHA=$(sha256sum "$APK" | awk '{print $1}')
+            row "APK built" PASS "\`$APK\` ($SIZE bytes)"
+            echo "- APK SHA-256: \`$SHA\`" >> "$RUNNER_TEMP/meta.txt"
+            echo "- APK size: $SIZE bytes" >> "$RUNNER_TEMP/meta.txt"
+            echo "- APK path: \`$APK\`" >> "$RUNNER_TEMP/meta.txt"
+
+            B=$("$AAPT2" dump badging "$APK")
+            M=$("$AAPT2" dump xmltree "$APK" --file AndroidManifest.xml)
+            L=$(unzip -Z1 "$APK")
+            PKG=$(echo "$B" | sed -n "s/^package: name='\([^']*\)'.*/\1/p")
+            VER=$(echo "$B" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
+            LBL=$(echo "$B" | sed -n "s/^application-label:'\(.*\)'$/\1/p")
+
+            [ "$PKG" = com.sneaks.agora.dev ] && row "package == com.sneaks.agora.dev" PASS "$PKG" || row "package == com.sneaks.agora.dev" FAIL "got '$PKG'"
+            [ "$LBL" = "Agora Dev" ] && row "label == Agora Dev" PASS "$LBL" || row "label == Agora Dev" FAIL "got '$LBL'"
+            [ "$VER" = 2.1.0-webui-dev ] && row "versionName == 2.1.0-webui-dev" PASS "$VER" || row "versionName == 2.1.0-webui-dev" FAIL "got '$VER'"
+
+            ARM=$(echo "$L" | grep -c '^lib/arm64-v8a/.*\.so$' || true)
+            MISSING=""
+            for so in libproot_exec.so libproot_loader.so libtalloc.so; do echo "$L" | grep -Fxq "lib/arm64-v8a/$so" || MISSING="$MISSING $so"; done
+            [ "$ARM" -gt 0 ] && [ -z "$MISSING" ] && row "arm64-v8a native libs" PASS "$ARM .so files incl. proot_exec/proot_loader/talloc" || row "arm64-v8a native libs" FAIL "count=$ARM missing:$MISSING"
+            ABIS=$(echo "$L" | sed -n 's#^lib/\([^/]*\)/.*#\1#p' | sort -u | tr '\n' ' ')
+
+            WEB=$(echo "$L" | grep -i '^assets/' | grep -i 'web' || true)
+            WEBN=$(echo "$WEB" | grep -c . || true)
+            [ "$WEBN" -gt 0 ] && row "WebUI assets present" PASS "$WEBN entries, e.g. $(echo "$WEB" | grep -iE 'index\.html' | head -1)" || row "WebUI assets present" FAIL "no assets/*web* entries"
+
+            AUTHS=$(echo "$M" | grep -oE 'android:authorities\([^)]*\)=\"[^\"]*\"' | sed 's/.*="\(.*\)"/\1/' | tr ';' '\n' | grep . || true)
+            BAD=$(echo "$AUTHS" | grep -v '^com\.sneaks\.agora\.dev' | grep . || true)
+            NA=$(echo "$AUTHS" | grep -c . || true)
+            [ "$NA" -gt 0 ] && [ -z "$BAD" ] && row "all provider authorities under com.sneaks.agora.dev" PASS "$(echo $AUTHS | tr '\n' ' ')" || row "all provider authorities under com.sneaks.agora.dev" FAIL "count=$NA outside: $(echo $BAD | tr '\n' ' ')"
+
+            X=$(mktemp -d); unzip -q "$APK" -d "$X"
+            MAN_HITS=$(echo "$M" | grep -c 'newoether' || true)
+            RES_HITS=$("$AAPT2" dump resources "$APK" 2>/dev/null | grep -c 'newoether' || true)
+            FILE_HITS=$(grep -rlaE 'com[./]newoether[./]agora' "$X" 2>/dev/null | sed "s#$X/##" || true)
+            NF=$(echo "$FILE_HITS" | grep -c . || true)
+            [ "$MAN_HITS" = 0 ] && [ "$RES_HITS" = 0 ] && [ "$NF" = 0 ] && row "zero references to com.newoether.agora" PASS "manifest 0, resources 0, files 0" \
+              || row "zero references to com.newoether.agora" FAIL "manifest=$MAN_HITS resources=$RES_HITS files=$NF: $(echo $FILE_HITS | tr '\n' ' ')"
+            if [ "$NF" -gt 0 ]; then
+              { echo; echo '## newoether hits by file (counts)'; echo '```'; for f in $FILE_HITS; do echo "$f: $(grep -aoE 'com[./]newoether[./]agora[A-Za-z0-9_./$]*' "$X/$f" | sort | uniq -c | sort -rn | head -15)"; done; echo '```'; } >> "$RUNNER_TEMP/extra.md"
+            fi
+
+            { echo; echo "## APK"; cat "$RUNNER_TEMP/meta.txt"; echo "- ABIs in APK: $ABIS"; echo; echo "## Provider authorities"; echo '```'; echo "$AUTHS"; echo '```'; } >> "$R"
+            [ -f "$RUNNER_TEMP/extra.md" ] && cat "$RUNNER_TEMP/extra.md" >> "$R"
+            cp "$APK" "$GITHUB_WORKSPACE/agora-dev.apk"
+          fi
+
+          { echo; echo "**RESULT: $([ $FAILS = 0 ] && echo 'ALL PASS' || echo "$FAILS FAIL")**"; } >> "$R"
+          cat "$R" >> "$GITHUB_STEP_SUMMARY"
+          cat "$R"
+
+      - name: Upload APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agora-dev-apk-verified
+          path: agora-dev.apk
+          if-no-files-found: warn
+
+      - name: Commit report to this branch
+        if: always()
+        run: |
+          [ -f report.md ] || echo "Report not generated; see run $GITHUB_RUN_ID" > report.md
+          git clone --depth 1 --branch ci/agora-dev-verify "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" out
+          mkdir -p out/reports && cp report.md out/reports/agora-dev-verify.md
+          cd out
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/agora-dev-verify.md
+          git commit -m "Verification report for $PINNED_SHA (run $GITHUB_RUN_ID)" && git push origin ci/agora-dev-verify
