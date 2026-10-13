@@ -90,7 +90,7 @@ class WebUiProviderAdminTest {
 
     @Test
     fun rejectsBadInputBeforeTouchingSettings() = webUi { token ->
-        for (bad in listOf(body(url = "http://evil.example/v1"), body(name = "OpenRouter"), "{\"name\":1}")) {
+        for (bad in listOf(body(url = "http://evil.example/v1"), body(name = "OpenCode Go"), "{\"name\":1}")) {
             val post = client.post("/api/providers") {
                 header(HttpHeaders.Cookie, "${WebUiServer.SESSION_COOKIE}=$token")
                 contentType(ContentType.Application.Json)
