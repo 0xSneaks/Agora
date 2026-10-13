@@ -2,7 +2,10 @@
 
 Repo: `0xSneaks/Agora` · Work branch: `feat/sneaks-ai-brand` (PR #2, open, CI green) · Target: `master`
 
-## Update
+## Update (2026-10-13 15:58)
+Owner approved signing + art. applicationId is now `com.sneaks.ai`; permanent keystore is in repo secrets (owner holds the backup). Launcher icon = face crop of the 0x Sneaky Alpha art; launch splash = CRT art (`drawable-nodpi/sneaky_alpha_crt.jpg`). Steps 2–3 below are done.
+
+## Earlier update
 App renamed **0x Sneaky Alpha**. Intro decided: the 0x Sneaky Alpha art (`drawable-nodpi/sneaky_alpha_art.jpg`) as a loading screen — portrait glitches in while a neon bar fills, then the baked OxSneakyAlpha sign flickers on.
 photo glitch intro (B) were removed; `SneaksIntro.kt` is now the neon sign, reused by the launch splash
 (`SneaksLaunchSplash.kt`) and onboarding page 0. Step 1 of Remaining is done.
@@ -56,7 +59,7 @@ A=https://127.0.0.1:8686; J=~/.agora_jar; umask 077
 curl -sk -c $J -H 'Content-Type: application/json' -d "{\"password\":\"$AGORA_WEBUI_PW\"}" $A/api/login
 curl -sk -b $J $A/api/providers
 curl -sk -b $J -H 'Content-Type: application/json' $A/api/providers \
-  -d "{\"name\":\"Space Bunny\",\"baseUrl\":\"https://opencode.ai/zen/go/v1\",\"apiKey\":\"$OPENCODE_API_KEY\",\"modelId\":\"glm-5.1\",\"alias\":\"Space Bunny\"}"
+  -d "{\"name\":\"OpenCode Zen\",\"baseUrl\":\"https://opencode.ai/inference/v1\",\"apiKey\":\"$OPENCODE_API_KEY\",\"modelId\":\"space-bunny-free\",\"alias\":\"Space Bunny\"}"
 ```
 Rules: unique names; 409 = report, don't work around; never print/log keys; GET the list after every add.
 
@@ -65,5 +68,5 @@ Rules: unique names; 409 = report, don't work around; never print/log keys; GET 
 - `curl -s` hides errors; use `-i` to see status codes.
 - Two apps can't share a WebUI port; a 404 on `/api/providers` usually means the old app answered.
 - Play Protect warns on sideload: "Install anyway".
-- Model ID `glm-5.1` was not verified to answer; check OpenCode Go's model list.
+- OpenCode moved endpoints to `/inference/` (verified on opencode.ai/docs/zen, 2026-10-13). Owner has Zen credit, not a Go subscription: use `https://opencode.ai/inference/v1` + `space-bunny-free`. Go (`/inference/go/v1`) does not serve `glm-5.1`.
 - Kotlin files must stay ≤ 800 lines (`verifyKotlinFileSize`); new strings need every locale (`SettingsResourceContractTest`).
