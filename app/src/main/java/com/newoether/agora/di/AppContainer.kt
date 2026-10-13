@@ -379,6 +379,7 @@ class AppContainer(
                     ).loadMessages(conversationId, listOf(messageId)).singleOrNull()
                 },
             ),
+            providers = com.newoether.agora.webui.AppWebUiProviders(providerRegistry, settingsRepository),
         )
     }
     // Built on the first browser connection, so app start never touches conversation data here.

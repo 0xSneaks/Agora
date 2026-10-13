@@ -79,6 +79,8 @@ internal class WebUiServer(
     private val httpsRedirectPort: () -> Int? = { null },
     private val clock: () -> Long = System::currentTimeMillis,
     private val toolImages: WebUiToolImages? = null,
+    /** Provider admin for signed-in agents; null leaves `/api/providers` unrouted. */
+    private val providers: WebUiProviders? = null,
 ) {
     fun install(application: Application) = with(application) {
         install(SecurityHeaders)
@@ -192,6 +194,12 @@ internal class WebUiServer(
                             revoke.cancel()
                         }
                     }
+                }
+            }
+            providers?.let { admin ->
+                route("/api/providers") {
+                    install(syncGate)
+                    providerAdminRoutes(admin)
                 }
             }
             route("/api/attachments/{connectionId}") {
