@@ -209,6 +209,7 @@ class MainActivity : ComponentActivity() {
                     val factory = remember { container.chatViewModelFactory() }
                     val viewModel: ChatViewModel = viewModel(factory = factory)
 
+                    androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize()) {
                     when (showOnboarding) {
                         null -> { /* loading — splash screen covers this */ }
                         true -> {
@@ -234,6 +235,8 @@ class MainActivity : ComponentActivity() {
                                 screenshotDestination = intent?.getStringExtra(EXTRA_SCREENSHOT_DESTINATION),
                             )
                         }
+                    }
+                    com.newoether.agora.ui.onboarding.SneaksLaunchSplash(enabled = intent?.getStringExtra(EXTRA_SCREENSHOT_DESTINATION) == null)
                     }
                 }
             }

@@ -252,8 +252,7 @@ fun WelcomeScreen(
 
     // ── Pages ──
     val pages = listOf(
-        WelcomePage(stringResource(R.string.onboarding_welcome_title), stringResource(R.string.onboarding_welcome_desc),
-            R.raw.welcome_video_1, R.raw.welcome_video_1_light),
+        WelcomePage(stringResource(R.string.onboarding_welcome_title), stringResource(R.string.onboarding_welcome_desc)),
         WelcomePage(stringResource(R.string.onboarding_byok_title), stringResource(R.string.onboarding_byok_desc),
             R.raw.welcome_video_2, R.raw.welcome_video_2_light),
         WelcomePage(stringResource(R.string.onboarding_provider_title), stringResource(R.string.onboarding_provider_desc)),
@@ -464,8 +463,17 @@ fun WelcomeScreen(
                                 )
                                 else -> {
                                     Box(Modifier.fillMaxSize()) {
-                                        players[index]?.let { LoopVideo(it) }
-                                        if (index == 0) FirstVideoScrim(isDarkTheme)
+                                        if (index == 0) {
+                                            // Neon needs a dark backdrop, even in light theme.
+                                            SneaksIntro(
+                                                animate = motionPolicy.allowContinuousMotion,
+                                                modifier = Modifier.padding(horizontal = 24.dp)
+                                                    .clip(RoundedCornerShape(28.dp))
+                                                    .background(Color.Black),
+                                            )
+                                        } else {
+                                            players[index]?.let { LoopVideo(it) }
+                                        }
                                     }
                                 }
                             }
@@ -597,19 +605,6 @@ fun WelcomeScreen(
             }
         }
     }
-}
-
-// ═════════════════════════════════════════════════════════════
-//  Scrim
-// ═════════════════════════════════════════════════════════════
-
-@Composable
-private fun FirstVideoScrim(isDarkTheme: Boolean) {
-    var visible by remember { mutableStateOf(true) }
-    val alpha by animateFloatAsState(if (visible) 1f else 0f, tween(500))
-    LaunchedEffect(Unit) { kotlinx.coroutines.delay(200); visible = false }
-    val scrimColor = if (isDarkTheme) Color.Black else Color.White
-    Box(Modifier.fillMaxSize().background(scrimColor.copy(alpha = alpha)))
 }
 
 // ═════════════════════════════════════════════════════════════
