@@ -332,6 +332,9 @@
     <string name="about_info">Informações</string>
     <string name="about_links">Links</string>
     <string name="about_developer">Desenvolvedor</string>
+    <string name="about_tip_title">Tip the Dev</string>
+    <string name="about_tip_desc">sneaks.skr · Solana · tap to copy address</string>
+    <string name="about_tip_copied">Solana address copied</string>
     <string name="about_developer_name">Newo Ether · Desenvolvedor solo</string>
     <string name="about_website">Site</string>
     <string name="about_github">GitHub</string>
@@ -566,7 +569,8 @@
     <string name="shell_confirm_setting">Confirmar ações de shell remoto</string>
     <string name="shell_confirm_setting_desc">Perguntar antes de o assistente executar comandos ou gravar arquivos em servidores SSH/Conch remotos</string>
     <string name="shell_confirm_notification_channel">Aprovação de comandos</string>
-    <string name="shell_confirm_notification_desc">Pede para permitir ou negar um comando remoto enquanto o Agora está em segundo plano</string>
+    <string name="shell_confirm_notification_desc">Pede para permitir ou negar um comando remoto enquanto o Agora está em segundo plano</string>
+
     <string name="ask_user_title">O assistente está perguntando</string>
     <string name="ask_user_send">Enviar</string>
     <string name="ask_user_next">Próxima</string>
@@ -669,7 +673,8 @@
     <string name="thinking_segment_display_card">Cartão</string>
     <string name="thinking_segment_display_bottom_sheet">Painel inferior</string>
     <string name="thinking_segments_title">Segmentos de raciocínio</string>
-    <string name="context_usage_messages">~%1$s / %2$s tokens</string>
+    <string name="context_usage_messages">~%1$s / %2$s tokens</string>
+
     <string name="context_part_system">Prompt do sistema</string>
     <string name="context_part_tools">Ferramentas</string>
     <string name="context_part_messages">Mensagens</string>

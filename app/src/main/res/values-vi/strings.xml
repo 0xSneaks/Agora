@@ -335,6 +335,9 @@
     <string name="about_info">Thông tin</string>
     <string name="about_links">Liên kết</string>
     <string name="about_developer">Nhà phát triển</string>
+    <string name="about_tip_title">Tip the Dev</string>
+    <string name="about_tip_desc">sneaks.skr · Solana · tap to copy address</string>
+    <string name="about_tip_copied">Solana address copied</string>
     <string name="about_developer_name">Newo Ether · Nhà phát triển độc lập</string>
     <string name="about_website">Trang web</string>
     <string name="about_github">GitHub</string>
@@ -575,7 +578,8 @@
     <string name="shell_confirm_setting">Xác nhận các hành động shell từ xa</string>
     <string name="shell_confirm_setting_desc">Hỏi trước khi trợ lý chạy các lệnh hoặc ghi tệp trên các máy chủ SSH/Conch từ xa</string>
     <string name="shell_confirm_notification_channel">Phê duyệt lệnh</string>
-    <string name="shell_confirm_notification_desc">Yêu cầu cho phép hoặc từ chối lệnh từ xa khi Agora chạy ngầm</string>
+    <string name="shell_confirm_notification_desc">Yêu cầu cho phép hoặc từ chối lệnh từ xa khi Agora chạy ngầm</string>
+
     <string name="ask_user_title">Trợ lý đang hỏi</string>
     <string name="ask_user_send">Gửi</string>
     <string name="ask_user_next">Tiếp</string>
@@ -675,7 +679,8 @@
     <string name="thinking_segment_display_card">Thẻ</string>
     <string name="thinking_segment_display_bottom_sheet">Bảng dưới</string>
     <string name="thinking_segments_title">Phân đoạn suy luận</string>
-    <string name="context_usage_messages">~%1$s / %2$s token</string>
+    <string name="context_usage_messages">~%1$s / %2$s token</string>
+
     <string name="context_part_system">Lời nhắc hệ thống</string>
     <string name="context_part_tools">Công cụ</string>
     <string name="context_part_messages">Tin nhắn</string>
