@@ -2,6 +2,11 @@
 
 Repo: `0xSneaks/Agora` · Work branch: `feat/sneaks-ai-brand` (PR #2, open, CI green) · Target: `master`
 
+## Update
+App renamed **0x Sneaky Alpha**. Intro decided: neon text only (no photo). The video splash (A) and the
+photo glitch intro (B) were removed; `SneaksIntro.kt` is now the neon sign, reused by the launch splash
+(`SneaksLaunchSplash.kt`) and onboarding page 0. Step 1 of Remaining is done.
+
 ## Goal
 Ship one signed **Sneaks AI** APK that updates in place forever, restore the owner's data into it,
 and hand the provider API to Muse (on-device agent in Termux).

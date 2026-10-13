@@ -464,7 +464,13 @@ fun WelcomeScreen(
                                 else -> {
                                     Box(Modifier.fillMaxSize()) {
                                         if (index == 0) {
-                                            SneaksIntro(animate = motionPolicy.allowContinuousMotion)
+                                            // Neon needs a dark backdrop, even in light theme.
+                                            SneaksIntro(
+                                                animate = motionPolicy.allowContinuousMotion,
+                                                modifier = Modifier.padding(horizontal = 24.dp)
+                                                    .clip(RoundedCornerShape(28.dp))
+                                                    .background(Color.Black),
+                                            )
                                         } else {
                                             players[index]?.let { LoopVideo(it) }
                                         }
