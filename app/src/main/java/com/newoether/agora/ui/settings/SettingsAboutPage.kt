@@ -254,6 +254,24 @@ fun SettingsAboutPage(viewModel: ChatViewModel, onBack: () -> Unit) {
                 )
             }, {
                 SettingsItem(
+                    headlineContent = { Text(stringResource(R.string.about_tip_title), modifier = Modifier.padding(vertical = 6.dp)) },
+                    supportingContent = { Text(stringResource(R.string.about_tip_desc)) },
+                    leadingContent = { Icon(Icons.Default.Favorite, contentDescription = null) },
+                    trailingContent = {
+                        Icon(
+                            Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    modifier = Modifier.clickable {
+                        val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
+                        clipboard?.setPrimaryClip(android.content.ClipData.newPlainText("sneaks.skr", TIP_SOLANA_ADDRESS))
+                        android.widget.Toast.makeText(context, context.getString(R.string.about_tip_copied), android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }, {
+                SettingsItem(
                     headlineContent = { Text(stringResource(R.string.about_privacy_policy), modifier = Modifier.padding(vertical = 6.dp)) },
                     leadingContent = { Icon(Icons.Default.VerifiedUser, contentDescription = null) },
                     trailingContent = {
@@ -298,3 +316,6 @@ fun SettingsAboutPage(viewModel: ChatViewModel, onBack: () -> Unit) {
             }
     }
 }
+
+/** Solana tip address behind sneaks.skr. */
+private const val TIP_SOLANA_ADDRESS = "FtuidxSaoNDeTuNTDuf9jLACVwqjgQeBwKTYC54f3GYp"
