@@ -3,7 +3,7 @@
 Repo: `0xSneaks/Agora` · Work branch: `feat/sneaks-ai-brand` (PR #2, open, CI green) · Target: `master`
 
 ## Update
-App renamed **0x Sneaky Alpha**. Intro decided: neon text only (no photo). The video splash (A) and the
+App renamed **0x Sneaky Alpha**. Intro decided: the 0x Sneaky Alpha art (`drawable-nodpi/sneaky_alpha_art.jpg`) as a loading screen — portrait glitches in while a neon bar fills, then the baked OxSneakyAlpha sign flickers on.
 photo glitch intro (B) were removed; `SneaksIntro.kt` is now the neon sign, reused by the launch splash
 (`SneaksLaunchSplash.kt`) and onboarding page 0. Step 1 of Remaining is done.
 

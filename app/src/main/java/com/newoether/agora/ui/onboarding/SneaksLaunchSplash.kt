@@ -41,4 +41,4 @@ internal fun SneaksLaunchSplash(enabled: Boolean = true) {
     }
 }
 
-private const val HOLD_MS = 900L
+private const val HOLD_MS = 600L
