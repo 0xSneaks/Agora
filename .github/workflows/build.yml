@@ -39,7 +39,21 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew -p build-logic test --stacktrace
-          ./gradlew :app:testFdroidDebugUnitTest :app:testPlayDebugUnitTest verifyKotlinFileSize --no-daemon --max-workers=1 --stacktrace
+          ./gradlew :app:testFdroidDebugUnitTest :app:testPlayDebugUnitTest verifyKotlinFileSize --no-daemon --max-workers=1 --stacktrace 2>&1 | tee gradle-out.txt; ec=${PIPESTATUS[0]}; grep -E '^e: |What went wrong|FAILED' gradle-out.txt | head -30 | sed 's/^/::error::/'; exit $ec
+
+      - name: Surface failures as annotations (temporary)
+        if: failure()
+        run: |
+          for f in $(grep -rl "<failure" app/build/test-results build-logic/build/test-results 2>/dev/null | head -20); do
+            python3 - "$f" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          for tc in ET.parse(sys.argv[1]).getroot().iter('testcase'):
+              for fl in tc.findall('failure'):
+                  msg = (fl.get('message') or fl.text or '')[:400].replace('\n', ' ')
+                  print(f"::error::{tc.get('classname')}.{tc.get('name')}: {msg}")
+          PY
+          done
+          find app/build -name '*.log' -path '*kotlin*' 2>/dev/null | head -0
 
       - name: Upload test reports
         if: failure()
