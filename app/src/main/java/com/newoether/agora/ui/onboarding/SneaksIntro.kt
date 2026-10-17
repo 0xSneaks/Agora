@@ -35,6 +35,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import com.newoether.agora.R
+import java.util.Locale
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -62,7 +63,7 @@ internal fun SneaksIntro(animate: Boolean, modifier: Modifier = Modifier) {
         val p = loadProgress(t)
         drawPortrait(art, frame, glitchIntensity(t, p), t)
         val uiAlpha = loadingUiAlpha(t)
-        if (uiAlpha > 0f) drawLoadingUi(measurer, frame, p, uiAlpha)
+        if (uiAlpha > 0f) drawLoadingUi(measurer, frame, p, uiAlpha, (LOAD_MS - t).coerceAtLeast(0L))
         val sign = tubeAlpha(t - SIGN_START_MS)
         if (sign > 0f) drawSign(art, frame, sign)
     }
@@ -166,16 +167,23 @@ private fun DrawScope.drawSign(art: ImageBitmap, frame: Rect, alpha: Float) {
     }
 }
 
-private fun DrawScope.drawLoadingUi(measurer: TextMeasurer, frame: Rect, p: Float, alpha: Float) {
+private fun DrawScope.drawLoadingUi(
+    measurer: TextMeasurer, frame: Rect, p: Float, alpha: Float, remainingMs: Long,
+) {
     val u = frame.width / 1024f // art pixels -> screen
-    // "Loading... 73%" line.
-    val title = measurer.measure(
-        "Loading... ${(p * 100).toInt()}%",
-        TextStyle(
-            fontFamily = FontFamily.Cursive, fontStyle = FontStyle.Italic, fontWeight = FontWeight.Bold,
-            fontSize = (54f * u).toSp(), color = PINK_CORE, shadow = Shadow(NEON_PINK, Offset.Zero, 22f * u),
-        ),
+    // "OxSneakyAlpha Loading... 73%" line, shrunk to fit if the cursive font runs wide.
+    val titleText = "OxSneakyAlpha Loading... ${(p * 100).toInt()}%"
+    fun titleStyle(px: Float) = TextStyle(
+        fontFamily = FontFamily.Cursive, fontStyle = FontStyle.Italic, fontWeight = FontWeight.Bold,
+        fontSize = px.toSp(), color = PINK_CORE, shadow = Shadow(NEON_PINK, Offset.Zero, 22f * u),
     )
+    var titlePx = 54f * u
+    var title = measurer.measure(titleText, titleStyle(titlePx))
+    val maxTitleW = frame.width * 0.94f
+    if (title.size.width > maxTitleW) {
+        titlePx *= maxTitleW / title.size.width
+        title = measurer.measure(titleText, titleStyle(titlePx))
+    }
     drawText(title, topLeft = Offset(frame.center.x - title.size.width / 2f, frame.top + 755f * u), alpha = alpha)
     // Bar frame with a soft cyan glow.
     val bar = Rect(frame.left + 82f * u, frame.top + 838f * u, frame.right - 82f * u, frame.top + 906f * u)
@@ -196,14 +204,14 @@ private fun DrawScope.drawLoadingUi(measurer: TextMeasurer, frame: Rect, p: Floa
             CornerRadius(4f * u), alpha = alpha,
         )
     }
-    val sub = measurer.measure(
-        "Initializing data stream...",
-        TextStyle(
-            fontFamily = FontFamily.Cursive, fontStyle = FontStyle.Italic,
-            fontSize = (34f * u).toSp(), color = PINK_CORE, shadow = Shadow(NEON_PINK, Offset.Zero, 12f * u),
-        ),
+    val subStyle = TextStyle(
+        fontFamily = FontFamily.Cursive, fontStyle = FontStyle.Italic,
+        fontSize = (34f * u).toSp(), color = PINK_CORE, shadow = Shadow(NEON_PINK, Offset.Zero, 12f * u),
     )
-    drawText(sub, topLeft = Offset(frame.center.x - sub.size.width / 2f, frame.top + 925f * u), alpha = alpha)
+    val sub = measurer.measure("Initializing Data Stream...", subStyle)
+    drawText(sub, topLeft = Offset(frame.center.x - sub.size.width / 2f, frame.top + 920f * u), alpha = alpha)
+    val eta = measurer.measure("ETA: ${String.format(Locale.US, "%.1f", remainingMs / 1000f)}s", subStyle)
+    drawText(eta, topLeft = Offset(frame.center.x - eta.size.width / 2f, frame.top + 962f * u), alpha = alpha)
 }
 
 private fun channel(r: Float, g: Float, b: Float) = ColorMatrix(

@@ -265,7 +265,7 @@
     <string name="play">再生</string>
     <string name="video_preview">動画のプレビュー</string>
     <string name="total_tokens">合計: %1$d トークン</string>
-    <string name="welcome_to_agora">Agora へようこそ。</string>
+    <string name="welcome_to_agora">Sneaks AI へようこそ。</string>
     <string name="database_incompatible">データベースが非互換です</string>
     <string name="database_incompatible_desc">データベースはこのバージョンの Agora と互換性がありません。データベースを消去してアプリを再起動してください。</string>
     <string name="quit">終了</string>
@@ -485,7 +485,7 @@
     <string name="show_documentation_links_desc">設定ページにドキュメントボタンを表示</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_welcome_title">Agora へようこそ</string>
+    <string name="onboarding_welcome_title">Sneaks AI へようこそ</string>
     <string name="onboarding_welcome_desc">データの主権を取り戻す BYOK アプリ。</string>
     <string name="onboarding_byok_title">自分のキーを使う</string>
     <string name="onboarding_byok_desc">API キーを設定するか GGUF モデルをインポートして、オンデバイス推論を利用しましょう。</string>

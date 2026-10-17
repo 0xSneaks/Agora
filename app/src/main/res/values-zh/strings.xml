@@ -83,7 +83,7 @@
     <string name="thought_for_minutes_called_tools">思考了 %1$d 分 %2$d 秒，调用 %3$d 个工具</string>
     <string name="thought_for_hours_called_tools">思考了 %1$d 小时 %2$d 分 %3$d 秒，调用 %4$d 个工具</string>
     <string name="called_n_tools">调用 %1$d 个工具</string>
-    <string name="welcome_to_agora">欢迎使用 Agora。</string>
+    <string name="welcome_to_agora">欢迎使用 Sneaks AI。</string>
     <string name="failed_to_generate">生成失败。</string>
     <string name="generation_stopped">生成已停止</string>
     <string name="import_invalid_gguf_title">无效的 GGUF 文件</string>
@@ -536,7 +536,7 @@
     <string name="show_documentation_links_desc">在设置页面显示文档按钮</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_welcome_title">欢迎来到 Agora</string>
+    <string name="onboarding_welcome_title">欢迎来到 Sneaks AI</string>
     <string name="onboarding_welcome_desc">一款 BYOK 应用，帮你夺回数据主权。</string>
     <string name="onboarding_byok_title">自带密钥</string>
     <string name="onboarding_byok_desc">配置 API 密钥或导入 GGUF 模型，解锁本地推理。</string>

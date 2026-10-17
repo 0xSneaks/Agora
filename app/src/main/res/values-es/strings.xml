@@ -265,7 +265,7 @@
     <string name="play">Reproducir</string>
     <string name="video_preview">Vista previa del vídeo</string>
     <string name="total_tokens">Total: %1$d tokens</string>
-    <string name="welcome_to_agora">Bienvenido a Agora.</string>
+    <string name="welcome_to_agora">Bienvenido a Sneaks AI.</string>
     <string name="database_incompatible">Base de datos incompatible</string>
     <string name="database_incompatible_desc">La base de datos es incompatible con esta versión de Agora. Borra la base de datos y reinicia la aplicación.</string>
     <string name="quit">Salir</string>
@@ -485,7 +485,7 @@
     <string name="show_documentation_links_desc">Mostrar el botón de documentación en las páginas de ajustes</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_welcome_title">Bienvenido a Agora</string>
+    <string name="onboarding_welcome_title">Bienvenido a Sneaks AI</string>
     <string name="onboarding_welcome_desc">Una app BYOK que recupera la soberanía de tus datos.</string>
     <string name="onboarding_byok_title">Trae tu propia clave</string>
     <string name="onboarding_byok_desc">Configura tus claves de API o importa un modelo GGUF para desbloquear la inferencia en el dispositivo.</string>

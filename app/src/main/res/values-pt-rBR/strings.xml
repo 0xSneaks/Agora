@@ -265,7 +265,7 @@
     <string name="play">Reproduzir</string>
     <string name="video_preview">Pré-visualização do vídeo</string>
     <string name="total_tokens">Total: %1$d tokens</string>
-    <string name="welcome_to_agora">Bem-vindo ao Agora.</string>
+    <string name="welcome_to_agora">Bem-vindo ao Sneaks AI.</string>
     <string name="database_incompatible">Banco de dados incompatível</string>
     <string name="database_incompatible_desc">O banco de dados é incompatível com esta versão do Agora. Limpe o banco de dados e reinicie o app.</string>
     <string name="quit">Sair</string>
@@ -485,7 +485,7 @@
     <string name="show_documentation_links_desc">Exibir o botão de documentação nas páginas de configurações</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_welcome_title">Bem-vindo ao Agora</string>
+    <string name="onboarding_welcome_title">Bem-vindo ao Sneaks AI</string>
     <string name="onboarding_welcome_desc">Um app BYOK que devolve a soberania sobre seus dados.</string>
     <string name="onboarding_byok_title">Use sua própria chave</string>
     <string name="onboarding_byok_desc">Configure suas chaves de API ou importe um modelo GGUF para desbloquear a inferência no dispositivo.</string>
