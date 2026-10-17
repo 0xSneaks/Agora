@@ -290,14 +290,11 @@ fun MainNavigation(
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
         appContext.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
         PackageManager.PERMISSION_GRANTED
-    var initialComposerFocusReady by remember {
-        mutableStateOf(screenshotDestination == null && !shouldRequestNotificationPermission)
-    }
+    // The composer must not grab focus (and pop the keyboard) at launch; it is focused only
+    // when the user taps New task.
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) {
-        initialComposerFocusReady = true
-    }
+    ) { }
     LaunchedEffect(Unit) {
         AgoraForegroundService.createChannels(appContext)
         if (shouldRequestNotificationPermission) {
@@ -461,7 +458,6 @@ fun MainNavigation(
         Box(modifier = Modifier.fillMaxSize()) {
             ChatApp(
                 viewModel = viewModel,
-                initialComposerFocusReady = initialComposerFocusReady,
                 onNavigateBack = taskHistoryPreview.backTaskId(currentConversationId, isNewChatMode)
                     ?.let { taskId ->
                         {
