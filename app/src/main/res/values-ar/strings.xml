@@ -265,7 +265,7 @@
     <string name="play">تشغيل</string>
     <string name="video_preview">معاينة الفيديو</string>
     <string name="total_tokens">الإجمالي: %1$d رمز</string>
-    <string name="welcome_to_agora">مرحبًا بك في Agora.</string>
+    <string name="welcome_to_agora">مرحبًا بك في Sneaks AI.</string>
     <string name="database_incompatible">قاعدة البيانات غير متوافقة</string>
     <string name="database_incompatible_desc">قاعدة البيانات غير متوافقة مع هذا الإصدار من Agora. يرجى مسح قاعدة البيانات وإعادة تشغيل التطبيق.</string>
     <string name="quit">خروج</string>
@@ -485,7 +485,7 @@
     <string name="show_documentation_links_desc">عرض زر الوثائق في صفحات الإعدادات</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_welcome_title">مرحبًا بك في Agora</string>
+    <string name="onboarding_welcome_title">مرحبًا بك في Sneaks AI</string>
     <string name="onboarding_welcome_desc">تطبيق BYOK يعيد إليك سيادتك على بياناتك.</string>
     <string name="onboarding_byok_title">أحضر مفتاحك الخاص</string>
     <string name="onboarding_byok_desc">أعدّ مفاتيح API الخاصة بك أو استورد نموذج GGUF لتفعيل الاستدلال على الجهاز.</string>

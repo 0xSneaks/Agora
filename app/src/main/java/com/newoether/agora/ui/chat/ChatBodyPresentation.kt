@@ -26,11 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.newoether.agora.R
 import com.newoether.agora.ui.common.AgoraHaptics
 import com.newoether.agora.ui.components.TypewriterMode
 import com.newoether.agora.ui.components.TypewriterText
@@ -94,7 +92,7 @@ internal fun ChatWelcomeContent(
                 .verticalScroll(rememberScrollState()),
             contentAlignment = Alignment.TopCenter
         ) {
-            val welcomeText = stringResource(R.string.welcome_to_agora)
+            val welcomeText = rememberWelcomeText(newChatEntryId)
             val availableWelcomeHeight =
                 windowHeightDp +
                     topBarH.value / 2f -
