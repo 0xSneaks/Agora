@@ -1,8 +1,8 @@
 # Privacy Policy
 
-**Last updated: August 10, 2026**
+**Last updated: October 19, 2026**
 
-Agora is a BYOK Android client. It does not operate a relay for chat completions: model requests go from your device to the provider or endpoint you configure.
+Sneaks AI (a modified version of Agora) is a BYOK Android client. It does not operate a relay for chat completions: model requests go from your device to the provider or endpoint you configure.
 
 ## Local data
 
@@ -19,11 +19,9 @@ Data leaves the device only through features you use:
 - search queries go to the selected web-search service;
 - MCP calls go to enabled MCP servers;
 - Conch and SSH operations go to configured remote devices;
-- release metadata can be checked when the app starts, at most once per day;
-- the optional rating form sends only the rating, name, email, and comment you explicitly submit to `https://newoether.com/api/rating`;
-- after a crash, one pending report is stored locally and the next launch asks whether to send it to `https://newoether.com/crash`. It contains the stack trace, app/Android version, device manufacturer/model, timestamp, and bounded diagnostic event tags, but no conversation text, credentials, or device identifiers.
+- release metadata can be checked from this project's GitHub releases when the app starts, at most once per day;
 
-Crash reports are never submitted automatically. Agora does not include a general analytics path. Third-party endpoints have their own privacy and retention policies.
+This build has no crash-report or rating submission: those features are switched off and nothing is sent to the original author's servers. There is no general analytics path. Third-party endpoints have their own privacy and retention policies.
 
 ## Backups and exports
 
@@ -31,15 +29,15 @@ A `.agora` export is a ZIP archive. If you explicitly include API keys or other 
 
 ## Transport and proxy
 
-The configured proxy applies to Agora's shared HTTP-client traffic, not direct SSH, local inference, or processes inside the Alpine sandbox. Conch application-layer encryption requires an API key; a blank-key endpoint uses plain JSON and relies on HTTPS for transport confidentiality.
+The configured proxy applies to the app's shared HTTP-client traffic, not direct SSH, local inference, or processes inside the Alpine sandbox. Conch application-layer encryption requires an API key; a blank-key endpoint uses plain JSON and relies on HTTPS for transport confidentiality.
 
 ## Permissions
 
-- **Internet**: provider, search, MCP, update, rating, and remote HTTP connections.
+- **Internet**: provider, search, MCP, update-check and remote HTTP connections.
 - **Notifications / foreground service**: ongoing generation, automation, and user-visible completion behavior.
 - **Files and media**: only when you select/import attachments, models, backups, fonts, or shared sandbox storage.
 - **Exact alarms**: optional automation scheduling where supported and explicitly enabled.
 
 ## Children, changes, and contact
 
-Agora is not directed to children under 13. This policy may be updated with the repository/application. Questions can be opened at [github.com/newo-ether/Agora](https://github.com/newo-ether/Agora).
+Sneaks AI is not directed to children under 13. This policy may be updated with the repository/application. Questions can be opened at [github.com/0xSneaks/sneaks-ai](https://github.com/0xSneaks/sneaks-ai).

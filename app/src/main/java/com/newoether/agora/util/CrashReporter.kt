@@ -23,7 +23,8 @@ import java.util.concurrent.ConcurrentLinkedDeque
 object CrashReporter {
 
     /** Cloudflare-fronted public endpoint. The origin server address is never referenced here. */
-    private const val ENDPOINT = "https://newoether.com/crash"
+    // Disabled in this build: no crash endpoint is configured, so nothing can be sent.
+    private const val ENDPOINT = "https://crash-reporting-disabled.invalid/crash"
     private const val DIR = "crash"
     private const val FILE = "pending.json"
     private const val MAX_TRACE_CHARS = 60_000
@@ -50,14 +51,10 @@ object CrashReporter {
      * (Application.onCreate), so crashes during startup are captured too.
      */
     fun install(context: Context) {
+        // Crash capture is disabled in this build: no uncaught-exception handler is installed,
+        // so no report is written to disk and no report dialog is ever shown. Android's
+        // default handler keeps handling crashes as usual.
         appInfo = readAppInfo(context)
-        val appContext = context.applicationContext
-        val previous = Thread.getDefaultUncaughtExceptionHandler()
-        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            runCatching { writeReport(appContext, throwable) }
-            // Always chain to the platform handler so the process dies as it normally would.
-            previous?.uncaughtException(thread, throwable)
-        }
     }
 
     /** Returns the pending crash report JSON, or null if none is waiting. */

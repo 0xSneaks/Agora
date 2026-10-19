@@ -201,20 +201,6 @@ fun SettingsAboutPage(viewModel: ChatViewModel, onBack: () -> Unit) {
             // -- Links --
             SettingsGroup(title = stringResource(R.string.about_links), items = listOf({
                 SettingsItem(
-                    headlineContent = { Text(stringResource(R.string.about_website)) },
-                    supportingContent = { Text("agora.newoether.com") },
-                    leadingContent = { Icon(Icons.Default.Language, contentDescription = null) },
-                    trailingContent = {
-                        Icon(
-                            Icons.Default.OpenInNew,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    },
-                    modifier = Modifier.clickable { openUrl("https://agora.newoether.com") }
-                )
-            }, {
-                SettingsItem(
                     headlineContent = { Text(stringResource(R.string.about_github), modifier = Modifier.padding(vertical = 6.dp)) },
                     leadingContent = { Icon(Icons.Default.Code, contentDescription = null) },
                     trailingContent = {
@@ -224,7 +210,7 @@ fun SettingsAboutPage(viewModel: ChatViewModel, onBack: () -> Unit) {
                             modifier = Modifier.size(18.dp),
                         )
                     },
-                    modifier = Modifier.clickable { openUrl("https://github.com/newo-ether/Agora") }
+                    modifier = Modifier.clickable { openUrl("https://github.com/0xSneaks/sneaks-ai") }
                 )
             }, {
                 SettingsItem(
@@ -237,7 +223,7 @@ fun SettingsAboutPage(viewModel: ChatViewModel, onBack: () -> Unit) {
                             modifier = Modifier.size(18.dp),
                         )
                     },
-                    modifier = Modifier.clickable { openUrl("https://github.com/newo-ether/Agora/issues") }
+                    modifier = Modifier.clickable { openUrl("https://github.com/0xSneaks/sneaks-ai/issues") }
                 )
             }, {
                 SettingsItem(
@@ -250,7 +236,7 @@ fun SettingsAboutPage(viewModel: ChatViewModel, onBack: () -> Unit) {
                             modifier = Modifier.size(18.dp),
                         )
                     },
-                    modifier = Modifier.clickable { openUrl("https://github.com/newo-ether/Agora/pulls") }
+                    modifier = Modifier.clickable { openUrl("https://github.com/0xSneaks/sneaks-ai/pulls") }
                 )
             }, {
                 SettingsItem(
@@ -281,7 +267,7 @@ fun SettingsAboutPage(viewModel: ChatViewModel, onBack: () -> Unit) {
                             modifier = Modifier.size(18.dp),
                         )
                     },
-                    modifier = Modifier.clickable { openUrl("https://github.com/newo-ether/Agora/blob/master/PRIVACY.md") }
+                    modifier = Modifier.clickable { openUrl("https://github.com/0xSneaks/sneaks-ai/blob/master/PRIVACY.md") }
                 )
             }, {
                 SettingsItem(
@@ -292,24 +278,47 @@ fun SettingsAboutPage(viewModel: ChatViewModel, onBack: () -> Unit) {
                 )
             }))
 
-            // -- Rating Section (title + card as one unit so the title stays tight to the card) --
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = stringResource(R.string.rating_category),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-                )
-                Surface(
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 1.dp,
-                    modifier = Modifier.fillMaxWidth()
+            // -- Attribution: original project credit and modified-version notice --
+            // Feedback submission to the original author's server is removed in this build;
+            // the credit and notice stay visible. Strings are the same localized resources the
+            // rating form used.
+            Surface(
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 1.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp)
+                    Text(
+                        text = decodeRatingOriginText(stringResource(R.string.rating_origin_modified_title_b64)),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = decodeRatingOriginText(stringResource(R.string.rating_origin_modified_body_b64)),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = decodeRatingOriginText(stringResource(R.string.rating_origin_credit_b64)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    TextButton(
+                        onClick = {
+                            openUrl(decodeRatingOriginText("aHR0cHM6Ly9naXRodWIuY29tL25ld28tZXRoZXIvQWdvcmE="))
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        RatingForm()
+                        Text(
+                            text = decodeRatingOriginText(stringResource(R.string.rating_origin_view_project_b64)),
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             }
