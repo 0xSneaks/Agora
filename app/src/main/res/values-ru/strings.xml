@@ -265,7 +265,7 @@
     <string name="play">Воспроизвести</string>
     <string name="video_preview">Предпросмотр видео</string>
     <string name="total_tokens">Всего: %1$d токенов</string>
-    <string name="welcome_to_agora">Добро пожаловать в Agora.</string>
+    <string name="welcome_to_agora">Добро пожаловать в Sneaks AI.</string>
     <string name="database_incompatible">Несовместимая база данных</string>
     <string name="database_incompatible_desc">База данных несовместима с этой версией Agora. Очистите базу данных и перезапустите приложение.</string>
     <string name="quit">Выйти</string>
@@ -485,7 +485,7 @@
     <string name="show_documentation_links_desc">Отображать кнопку документации на страницах настроек</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_welcome_title">Добро пожаловать в Agora</string>
+    <string name="onboarding_welcome_title">Добро пожаловать в Sneaks AI</string>
     <string name="onboarding_welcome_desc">Приложение BYOK, возвращающее вам суверенитет над данными.</string>
     <string name="onboarding_byok_title">Используйте свой ключ</string>
     <string name="onboarding_byok_desc">Настройте свои API-ключи или импортируйте модель GGUF, чтобы разблокировать вывод на устройстве.</string>
@@ -818,4 +818,11 @@
     <string name="message_source_loop">Цикл</string>
     <string name="message_source_ask_user">Вопрос</string>
     <string name="message_source_unanswered">Без ответа</string>
+    <string name="onboarding_name_title">Как к вам обращаться?</string>
+    <string name="onboarding_name_desc">Ваше имя хранится только на этом устройстве и используется лишь для приветствия.</string>
+    <string name="onboarding_name_hint">Ваше имя</string>
+    <string name="greeting_morning">Доброе утро, %1$s</string>
+    <string name="greeting_afternoon">Добрый день, %1$s</string>
+    <string name="greeting_evening">Добрый вечер, %1$s</string>
+    <string name="greeting_night">Привет, %1$s</string>
 </resources>

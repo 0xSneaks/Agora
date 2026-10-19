@@ -82,7 +82,7 @@
     <string name="thought_for_minutes_called_tools">思考了 %1$d 分 %2$d 秒，呼叫 %3$d 個工具</string>
     <string name="thought_for_hours_called_tools">思考了 %1$d 小時 %2$d 分 %3$d 秒，呼叫 %4$d 個工具</string>
     <string name="called_n_tools">呼叫 %1$d 個工具</string>
-    <string name="welcome_to_agora">歡迎使用 Agora。</string>
+    <string name="welcome_to_agora">歡迎使用 Sneaks AI。</string>
     <string name="failed_to_generate">生成失敗。</string>
     <string name="generation_stopped">生成已停止</string>
     <string name="import_invalid_gguf_title">無效的 GGUF 檔案</string>
@@ -527,7 +527,7 @@
     <string name="show_documentation_links_desc">在設定頁面顯示文件按鈕</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_welcome_title">歡迎來到 Agora</string>
+    <string name="onboarding_welcome_title">歡迎來到 Sneaks AI</string>
     <string name="onboarding_welcome_desc">一款 BYOK 應用程式，協助您奪回資料主權。</string>
     <string name="onboarding_byok_title">自帶金鑰</string>
     <string name="onboarding_byok_desc">設定 API 金鑰或匯入 GGUF 模型，解鎖本機推理。</string>
@@ -821,4 +821,11 @@
     <string name="message_source_loop">循環</string>
     <string name="message_source_ask_user">詢問</string>
     <string name="message_source_unanswered">未回答</string>
+    <string name="onboarding_name_title">我該怎麼稱呼你？</string>
+    <string name="onboarding_name_desc">你的名字只會儲存在這台裝置上，僅用於問候你。</string>
+    <string name="onboarding_name_hint">你的名字</string>
+    <string name="greeting_morning">早安，%1$s</string>
+    <string name="greeting_afternoon">午安，%1$s</string>
+    <string name="greeting_evening">晚安，%1$s</string>
+    <string name="greeting_night">嗨，%1$s</string>
 </resources>

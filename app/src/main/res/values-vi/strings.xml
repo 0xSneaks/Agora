@@ -268,7 +268,7 @@
     <string name="play">Phát</string>
     <string name="video_preview">Xem trước video</string>
     <string name="total_tokens">Tổng cộng: %1$d token</string>
-    <string name="welcome_to_agora">Chào mừng đến với Agora.</string>
+    <string name="welcome_to_agora">Chào mừng đến với Sneaks AI.</string>
     <string name="database_incompatible">Cơ sở dữ liệu không tương thích</string>
     <string name="database_incompatible_desc">Cơ sở dữ liệu không tương thích với phiên bản Agora này. Vui lòng xóa cơ sở dữ liệu và khởi động lại ứng dụng.</string>
     <string name="quit">Thoát</string>
@@ -490,7 +490,7 @@
     <string name="show_documentation_links_desc">Hiển thị nút tài liệu hướng dẫn trên các trang cài đặt</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_welcome_title">Chào mừng đến với Agora</string>
+    <string name="onboarding_welcome_title">Chào mừng đến với Sneaks AI</string>
     <string name="onboarding_welcome_desc">Một ứng dụng BYOK (Tự mang khóa của bạn) giúp bạn giành lại chủ quyền dữ liệu.</string>
     <string name="onboarding_byok_title">Tự mang khóa của bạn (BYOK)</string>
     <string name="onboarding_byok_desc">Thiết lập khóa API của bạn hoặc nhập mô hình GGUF để mở khóa tính năng suy luận ngay trên thiết bị.</string>
@@ -824,4 +824,11 @@
     <string name="message_source_loop">Vòng lặp</string>
     <string name="message_source_ask_user">Hỏi người dùng</string>
     <string name="message_source_unanswered">Chưa trả lời</string>
+    <string name="onboarding_name_title">Tôi nên gọi bạn là gì?</string>
+    <string name="onboarding_name_desc">Tên của bạn chỉ lưu trên thiết bị này và chỉ dùng để chào bạn.</string>
+    <string name="onboarding_name_hint">Tên của bạn</string>
+    <string name="greeting_morning">Chào buổi sáng, %1$s</string>
+    <string name="greeting_afternoon">Chào buổi chiều, %1$s</string>
+    <string name="greeting_evening">Chào buổi tối, %1$s</string>
+    <string name="greeting_night">Xin chào, %1$s</string>
 </resources>

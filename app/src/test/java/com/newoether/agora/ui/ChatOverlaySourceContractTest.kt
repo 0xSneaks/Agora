@@ -232,10 +232,8 @@ internal class ChatOverlaySourceContractTest : UiSourceContractFixture() {
 
         assertFalse(activityStartup.contains("requestPermissions("))
         assertTrue(onboardingBranch.substringAfter("false -> {").contains("MainNavigation("))
-        assertTrue(mainNavigation.contains(
-            "mutableStateOf(screenshotDestination == null && !shouldRequestNotificationPermission)"
-        ))
-        assertTrue(permissionLauncher.contains("initialComposerFocusReady = true"))
+        assertFalse(mainNavigation.contains("initialComposerFocusReady"))
+        assertFalse(permissionLauncher.contains("initialComposerFocusReady"))
         assertTrue(permissionEffect.contains("AgoraForegroundService.createChannels(appContext)"))
         assertTrue(permissionEffect.contains("notificationPermissionLauncher.launch("))
         assertFalse(permissionEffect.contains("delay("))
@@ -243,8 +241,8 @@ internal class ChatOverlaySourceContractTest : UiSourceContractFixture() {
             permissionEffect.indexOf("AgoraForegroundService.createChannels(appContext)") <
                 permissionEffect.indexOf("notificationPermissionLauncher.launch("),
         )
-        assertTrue(main.contains("initialComposerFocusReady = initialComposerFocusReady"))
-        assertTrue(chat.contains("initialComposerFocusReady: Boolean = true"))
+        assertFalse(main.contains("initialComposerFocusReady = initialComposerFocusReady"))
+        assertTrue(chat.contains("initialComposerFocusReady: Boolean = false"))
         assertTrue(chat.contains("ChatLaunchInteractionEffects("))
         assertTrue(launchEffects.contains("LaunchedEffect(Unit)"))
         assertTrue(launchEffects.contains("latestOnShowLaunchContent()"))

@@ -83,7 +83,9 @@ import com.newoether.agora.R
 import com.newoether.agora.data.CustomEndpointProtocol
 import com.newoether.agora.data.CustomProviderConfig
 import com.newoether.agora.data.LocalChatModelConfig
+import com.newoether.agora.data.UserProfileStore
 import com.newoether.agora.data.modelAliasDisplayName
+import com.newoether.agora.data.rememberUserName
 import com.newoether.agora.ui.components.TypewriterMode
 import com.newoether.agora.ui.components.TypewriterText
 import com.newoether.agora.ui.motion.LocalAgoraMotionPolicy
@@ -108,10 +110,11 @@ private fun resolveVideoRes(isDarkTheme: Boolean, darkResId: Int?, lightResId: I
     if (isDarkTheme) darkResId else lightResId ?: darkResId
 
 // Page indices
-private const val PAGE_PROVIDER = 2
-private const val PAGE_API_KEY = 3
-private const val PAGE_MODEL_CONFIG = 5
-private const val PAGE_AUTO_BACKUP = 6
+private const val PAGE_NAME = 1
+private const val PAGE_PROVIDER = 3
+private const val PAGE_API_KEY = 4
+private const val PAGE_MODEL_CONFIG = 6
+private const val PAGE_AUTO_BACKUP = 7
 
 @Composable
 fun WelcomeScreen(
@@ -148,6 +151,18 @@ fun WelcomeScreen(
     val localChatModels by viewModel.settings.localChatModels.collectAsState()
     val existingApiKeys by viewModel.settings.apiKeys.collectAsState()
     val existingProviderUrls by viewModel.settings.providerBaseUrls.collectAsState()
+
+    // Optional display name, used only for greetings. Saved shortly after each edit and on leaving the page.
+    val profileStore = remember { UserProfileStore(context.applicationContext) }
+    val savedName = rememberUserName()
+    var nameText by remember { mutableStateOf("") }
+    LaunchedEffect(savedName) { if (nameText.isBlank()) nameText = savedName }
+    LaunchedEffect(nameText) {
+        if (nameText != savedName) {
+            kotlinx.coroutines.delay(300)
+            profileStore.saveName(nameText)
+        }
+    }
 
     // Pre-fill API key / URL when switching to a configured provider
     LaunchedEffect(selectedProvider, customProviders) {
@@ -253,6 +268,7 @@ fun WelcomeScreen(
     // ── Pages ──
     val pages = listOf(
         WelcomePage(stringResource(R.string.onboarding_welcome_title), stringResource(R.string.onboarding_welcome_desc)),
+        WelcomePage(stringResource(R.string.onboarding_name_title), stringResource(R.string.onboarding_name_desc)),
         WelcomePage(stringResource(R.string.onboarding_byok_title), stringResource(R.string.onboarding_byok_desc),
             R.raw.welcome_video_2, R.raw.welcome_video_2_light),
         WelcomePage(stringResource(R.string.onboarding_provider_title), stringResource(R.string.onboarding_provider_desc)),
@@ -326,6 +342,7 @@ fun WelcomeScreen(
     LaunchedEffect(pagerState.currentPage) {
         // Save provider credentials when leaving the API Key page (swipe or button).
         if (prevPage == PAGE_API_KEY) saveProviderCredentials()
+        if (prevPage == PAGE_NAME) profileStore.saveName(nameText)
         prevPage = pagerState.currentPage
         fm.clearFocus()
         if (pagerState.currentPage !in visitedPages) {
@@ -407,6 +424,12 @@ fun WelcomeScreen(
                         // Main content area (video or config card)
                         Box(Modifier.fillMaxWidth().weight(1.8f), contentAlignment = Alignment.Center) {
                             when (index) {
+                                PAGE_NAME -> NamePage(
+                                    name = nameText,
+                                    hint = stringResource(R.string.onboarding_name_hint),
+                                    onNameChange = { nameText = it.take(UserProfileStore.MAX_NAME_LENGTH) },
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 36.dp).alpha(contentAlpha),
+                                )
                                 PAGE_PROVIDER -> ProviderPage(
                                     providers = allProviders,
                                     selected = selectedProvider,

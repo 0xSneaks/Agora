@@ -265,7 +265,7 @@
     <string name="play">Lire</string>
     <string name="video_preview">Aperçu de la vidéo</string>
     <string name="total_tokens">Total : %1$d tokens</string>
-    <string name="welcome_to_agora">Bienvenue sur Agora.</string>
+    <string name="welcome_to_agora">Bienvenue sur Sneaks AI.</string>
     <string name="database_incompatible">Base de données incompatible</string>
     <string name="database_incompatible_desc">La base de données est incompatible avec cette version d\'Agora. Veuillez effacer la base de données et redémarrer l\'application.</string>
     <string name="quit">Quitter</string>
@@ -485,7 +485,7 @@
     <string name="show_documentation_links_desc">Afficher le bouton de documentation sur les pages de paramètres</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_welcome_title">Bienvenue sur Agora</string>
+    <string name="onboarding_welcome_title">Bienvenue sur Sneaks AI</string>
     <string name="onboarding_welcome_desc">Une app BYOK qui vous redonne la souveraineté sur vos données.</string>
     <string name="onboarding_byok_title">Apportez votre propre clé</string>
     <string name="onboarding_byok_desc">Configurez vos clés d\'API ou importez un modèle GGUF pour débloquer l\'inférence sur l\'appareil.</string>
@@ -818,4 +818,11 @@
     <string name="message_source_loop">Boucle</string>
     <string name="message_source_ask_user">Question</string>
     <string name="message_source_unanswered">Sans réponse</string>
+    <string name="onboarding_name_title">Comment puis-je vous appeler ?</string>
+    <string name="onboarding_name_desc">Votre nom reste sur cet appareil et sert uniquement à vous saluer.</string>
+    <string name="onboarding_name_hint">Votre nom</string>
+    <string name="greeting_morning">Bonjour, %1$s</string>
+    <string name="greeting_afternoon">Bon après-midi, %1$s</string>
+    <string name="greeting_evening">Bonsoir, %1$s</string>
+    <string name="greeting_night">Salut, %1$s</string>
 </resources>

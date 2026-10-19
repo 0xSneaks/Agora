@@ -61,7 +61,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ChatApp(
     viewModel: ChatViewModel,
-    initialComposerFocusReady: Boolean = true,
+    initialComposerFocusReady: Boolean = false,
     onNavigateBack: (() -> Unit)? = null,
     drawerEnabled: Boolean = true,
     openDrawerOnStart: Boolean = false, initialScrollToTop: Boolean = false,

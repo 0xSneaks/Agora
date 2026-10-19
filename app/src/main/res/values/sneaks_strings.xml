@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sneaks AI strings. Every locale must define these keys (SettingsResourceContractTest). -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="onboarding_name_title">What should I call you?</string>
+    <string name="onboarding_name_desc">Your name stays on this device and is only used to greet you.</string>
+    <string name="onboarding_name_hint">Your name</string>
+    <string name="greeting_morning">Good morning, %1$s</string>
+    <string name="greeting_afternoon">Good afternoon, %1$s</string>
+    <string name="greeting_evening">Good evening, %1$s</string>
+    <string name="greeting_night">Hey, %1$s</string>
+</resources>
