@@ -818,4 +818,11 @@
     <string name="message_source_loop">حلقة</string>
     <string name="message_source_ask_user">سؤال</string>
     <string name="message_source_unanswered">بلا إجابة</string>
+    <string name="onboarding_name_title">ماذا تحب أن أناديك؟</string>
+    <string name="onboarding_name_desc">يبقى اسمك على هذا الجهاز ويُستخدم فقط لتحيتك.</string>
+    <string name="onboarding_name_hint">اسمك</string>
+    <string name="greeting_morning">صباح الخير، %1$s</string>
+    <string name="greeting_afternoon">طاب يومك، %1$s</string>
+    <string name="greeting_evening">مساء الخير، %1$s</string>
+    <string name="greeting_night">أهلاً، %1$s</string>
 </resources>

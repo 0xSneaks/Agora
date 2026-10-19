@@ -818,4 +818,11 @@
     <string name="message_source_loop">Bucle</string>
     <string name="message_source_ask_user">Pregunta</string>
     <string name="message_source_unanswered">Sin respuesta</string>
+    <string name="onboarding_name_title">¿Cómo quieres que te llame?</string>
+    <string name="onboarding_name_desc">Tu nombre se queda en este dispositivo y solo se usa para saludarte.</string>
+    <string name="onboarding_name_hint">Tu nombre</string>
+    <string name="greeting_morning">Buenos días, %1$s</string>
+    <string name="greeting_afternoon">Buenas tardes, %1$s</string>
+    <string name="greeting_evening">Buenas noches, %1$s</string>
+    <string name="greeting_night">Hola, %1$s</string>
 </resources>

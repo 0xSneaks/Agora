@@ -818,4 +818,11 @@
     <string name="message_source_loop">ループ</string>
     <string name="message_source_ask_user">質問</string>
     <string name="message_source_unanswered">未回答</string>
+    <string name="onboarding_name_title">なんて呼べばいいですか？</string>
+    <string name="onboarding_name_desc">お名前はこの端末内にのみ保存され、あいさつにだけ使われます。</string>
+    <string name="onboarding_name_hint">お名前</string>
+    <string name="greeting_morning">おはようございます、%1$sさん</string>
+    <string name="greeting_afternoon">こんにちは、%1$sさん</string>
+    <string name="greeting_evening">こんばんは、%1$sさん</string>
+    <string name="greeting_night">やあ、%1$sさん</string>
 </resources>

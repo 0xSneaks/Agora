@@ -818,4 +818,11 @@
     <string name="message_source_loop">Schleife</string>
     <string name="message_source_ask_user">Rückfrage</string>
     <string name="message_source_unanswered">Nicht beantwortet</string>
+    <string name="onboarding_name_title">Wie soll ich dich nennen?</string>
+    <string name="onboarding_name_desc">Dein Name bleibt auf diesem Gerät und wird nur für die Begrüßung verwendet.</string>
+    <string name="onboarding_name_hint">Dein Name</string>
+    <string name="greeting_morning">Guten Morgen, %1$s</string>
+    <string name="greeting_afternoon">Guten Tag, %1$s</string>
+    <string name="greeting_evening">Guten Abend, %1$s</string>
+    <string name="greeting_night">Hallo, %1$s</string>
 </resources>

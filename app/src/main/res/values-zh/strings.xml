@@ -811,4 +811,11 @@
     <string name="message_source_loop">循环</string>
     <string name="message_source_ask_user">询问</string>
     <string name="message_source_unanswered">未回答</string>
+    <string name="onboarding_name_title">我该怎么称呼你？</string>
+    <string name="onboarding_name_desc">你的名字只保存在此设备上，仅用于问候你。</string>
+    <string name="onboarding_name_hint">你的名字</string>
+    <string name="greeting_morning">早上好，%1$s</string>
+    <string name="greeting_afternoon">下午好，%1$s</string>
+    <string name="greeting_evening">晚上好，%1$s</string>
+    <string name="greeting_night">嗨，%1$s</string>
 </resources>
