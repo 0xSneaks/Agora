@@ -36,8 +36,8 @@ class OpenRouterProvider : BaseOpenAiProvider() {
     }
 
     override fun getExtraHeaders(config: ProviderConfig): Map<String, String> = mapOf(
-        "HTTP-Referer" to "https://github.com/newo-ether/Agora",
-        "X-Title" to "Agora"
+        "HTTP-Referer" to "https://github.com/0xSneaks/sneaks-ai",
+        "X-Title" to "Sneaks AI"
     )
 
     override suspend fun parseDeltaContent(

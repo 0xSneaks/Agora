@@ -36,6 +36,9 @@ import com.newoether.agora.viewmodel.ChatViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 
+// The rating prompt posted to the original author's server; disabled in this build.
+private const val RATING_PROMPT_ENABLED = false
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun MainApplicationDialogs(
@@ -276,7 +279,7 @@ internal fun MainApplicationDialogs(
         val submitted = settingsManager.ratingPromptSubmitted.first()
         val dismissed = settingsManager.ratingPromptDismissed.first()
         val msgCount = settingsManager.totalMessagesSent.first()
-        if (!submitted && !dismissed && firstLaunch != null && msgCount >= 3) {
+        if (RATING_PROMPT_ENABLED && !submitted && !dismissed && firstLaunch != null && msgCount >= 3) {
             val daysElapsed = (now - firstLaunch) / (1000 * 60 * 60 * 24)
             if (daysElapsed >= 7) {
                 showRatingPrompt = true

@@ -36,7 +36,7 @@ object UpdateChecker {
     suspend fun check(currentVersion: String): UpdateInfo? = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
-                .url("https://api.github.com/repos/newo-ether/Agora/releases/latest")
+                .url("https://api.github.com/repos/0xSneaks/sneaks-ai/releases/latest")
                 .header("Accept", "application/vnd.github+json")
                 .build()
 
