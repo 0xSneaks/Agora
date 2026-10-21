@@ -15,7 +15,7 @@ describe('greeting (matches Android Greeting.kt)', () => {
   });
 });
 
-describe('neon intro curves (ported from SneaksIntro.kt)', () => {
+describe('neon intro curves (ported from the Android launch intro)', () => {
   it('fills the bar monotonically to 100%', () => {
     let prev = -1;
     for (let t = 0; t <= LOAD_MS; t += 50) {
