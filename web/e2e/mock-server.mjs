@@ -20,7 +20,11 @@ http.createServer((req, res) => {
     req.on('data', (c) => (body += c));
     req.on('end', () => {
       const j = JSON.parse(body);
-      const last = [...j.messages].reverse().find((m) => m.role === 'user')?.content ?? '';
+      const lastUser = [...j.messages].reverse().find((m) => m.role === 'user')?.content ?? '';
+      const parts = Array.isArray(lastUser) ? lastUser : [];
+      const last = Array.isArray(lastUser)
+        ? `${parts.filter((p) => p.type === 'text').map((p) => p.text).join('')} [images:${parts.filter((p) => p.type === 'image_url').length} files:${parts.filter((p) => p.type === 'file').length}]`
+        : lastUser;
       const lastMsg = j.messages[j.messages.length - 1];
       const toolNames = (j.tools ?? []).map((t) => t.function.name);
       const call = (name, args) => {

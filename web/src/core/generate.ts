@@ -36,7 +36,7 @@ export function partsToWire(parts: Part[]): WireMessage[] {
 export function historyToWire(path: Message[]): WireMessage[] {
   const out: WireMessage[] = [];
   for (const m of path) {
-    if (m.role === 'user') out.push({ role: 'user', text: m.text });
+    if (m.role === 'user') out.push({ role: 'user', text: m.text, ...(m.attachments?.length ? { attachments: m.attachments } : {}) });
     else out.push(...partsToWire(m.parts));
   }
   return out;

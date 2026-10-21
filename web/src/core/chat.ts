@@ -8,7 +8,8 @@ import { getSecret, secretName } from './secrets';
 import { baseUrlFor, providerById, settingsStore } from './settings';
 import { createStore } from './store';
 import { activePath, keyOf, selectSibling } from './tree';
-import type { Conversation, Message, ToolCall, ToolDef } from './types';
+import type { Attachment, Conversation, Message, ToolCall, ToolDef } from './types';
+import { readsPdf } from './attachments';
 
 export interface ToolHost {
   /** Tools offered for this request and the system-prompt additions they need. */
@@ -123,27 +124,28 @@ function titleFrom(text: string): string {
   return line.length > 48 ? line.slice(0, 47) + '…' : line || 'New chat';
 }
 
-export async function send(text: string): Promise<void> {
+export async function send(text: string, attachments: Attachment[] = []): Promise<void> {
   const body = text.trim();
-  if (!body) return;
+  if (!body && !attachments.length) return;
   let conv = current();
   const now = Date.now();
   if (!conv) {
     const d = defaultModel();
-    conv = { id: newId('c_'), title: titleFrom(body), createdAt: now, updatedAt: now, selected: {}, providerId: d.providerId, model: d.model };
+    conv = { id: newId('c_'), title: titleFrom(body || attachments[0]?.name || ''), createdAt: now, updatedAt: now, selected: {}, providerId: d.providerId, model: d.model };
     cache.set(conv.id, new Map());
     bump({ currentId: conv.id, messages: cache.get(conv.id)! });
   }
   if (controllers.has(conv.id)) return;
   const path = visiblePath();
   const parentId = path.length ? path[path.length - 1].id : null;
-  await startTurn(conv, parentId, body);
+  await startTurn(conv, parentId, body, attachments);
 }
 
 /** Adds a user message under `parentId`, plus an assistant reply, and generates it. */
-async function startTurn(conv: Conversation, parentId: string | null, text: string): Promise<void> {
+async function startTurn(conv: Conversation, parentId: string | null, text: string, attachments: Attachment[] = []): Promise<void> {
   const map = await messagesFor(conv.id);
   const user: Message = { id: newId('m_'), convId: conv.id, parentId, role: 'user', text, parts: [], createdAt: Date.now(), status: 'done' };
+  if (attachments.length) user.attachments = attachments;
   const assistant = makeAssistant(conv.id, user.id);
   assistant.createdAt = user.createdAt + 1;
   map.set(user.id, user);
@@ -162,8 +164,8 @@ async function startTurn(conv: Conversation, parentId: string | null, text: stri
 export async function editMessage(msgId: string, text: string): Promise<void> {
   const conv = current();
   const msg = chatStore.get().messages.get(msgId);
-  if (!conv || !msg || msg.role !== 'user' || controllers.has(conv.id) || !text.trim()) return;
-  await startTurn(conv, msg.parentId, text.trim());
+  if (!conv || !msg || msg.role !== 'user' || controllers.has(conv.id) || (!text.trim() && !msg.attachments?.length)) return;
+  await startTurn(conv, msg.parentId, text.trim(), msg.attachments ?? []);
 }
 
 /** Regenerate: a new assistant reply beside the original. */
@@ -252,6 +254,9 @@ async function generate(conv: Conversation, assistant: Message): Promise<void> {
     const settings = settingsStore.get();
     const path = activePath(conv, map.values());
     const before = path.slice(0, path.findIndex((m) => m.id === assistant.id));
+    if (!readsPdf(provider) && before.some((m) => m.attachments?.some((a) => a.kind === 'pdf'))) {
+      throw new Error(`${provider.label} can't read PDF files here. Use Anthropic, Google, OpenAI or Open Router for PDFs.`);
+    }
     const toolSetup = await toolHost.prepare(conv);
     const system = [settings.systemPrompt.trim(), ...toolSetup.system].filter(Boolean).join('\n\n') || undefined;
     await runTurn({

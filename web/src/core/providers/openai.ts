@@ -1,6 +1,7 @@
 // OpenAI-compatible Chat Completions adapter (OpenAI, DeepSeek, Qwen, OpenRouter, OpenCode Go,
 // Groq, custom OpenAI-compatible). Mirrors Android BaseOpenAiProvider. Licensed under GPL-3.0.
 import type { ChatRequest, ProviderAdapter, StreamEvent, ToolCall, WireMessage } from '../types';
+import { binaryParts, textWithFiles } from '../attachments';
 import { getJson, newId, postJson, trimBase, withV1 } from './http';
 import { readSse } from './sse';
 
@@ -8,7 +9,21 @@ export function toOpenAiMessages(system: string | undefined, messages: WireMessa
   const out: unknown[] = [];
   if (system) out.push({ role: 'system', content: system });
   for (const m of messages) {
-    if (m.role === 'user') out.push({ role: 'user', content: m.text });
+    if (m.role === 'user') {
+      const text = textWithFiles(m.text, m.attachments);
+      const bins = binaryParts(m.attachments);
+      out.push({
+        role: 'user',
+        content: bins.length
+          ? [
+            { type: 'text', text },
+            ...bins.map((a) => (a.kind === 'image'
+              ? { type: 'image_url', image_url: { url: `data:${a.mime};base64,${a.data}` } }
+              : { type: 'file', file: { filename: a.name, file_data: `data:application/pdf;base64,${a.data}` } })),
+          ]
+          : text,
+      });
+    }
     else if (m.role === 'tool') out.push({ role: 'tool', tool_call_id: m.callId, content: m.result });
     else if (m.toolCalls?.length) {
       out.push({

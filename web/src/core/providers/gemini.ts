@@ -1,6 +1,7 @@
 // Google Gemini adapter (Gemini and custom Google-compatible). Mirrors Android GeminiProvider.
 // Licensed under GPL-3.0.
 import type { ChatRequest, ProviderAdapter, StreamEvent, ToolCall, WireMessage } from '../types';
+import { binaryParts, textWithFiles } from '../attachments';
 import { getJson, newId, postJson, safeParseArgs, trimBase } from './http';
 import { readSse } from './sse';
 
@@ -12,7 +13,10 @@ export function toGeminiContents(messages: WireMessage[]): { role: 'user' | 'mod
     else out.push({ role, parts: [part] });
   };
   for (const m of messages) {
-    if (m.role === 'user') push('user', { text: m.text });
+    if (m.role === 'user') {
+      for (const a of binaryParts(m.attachments)) push('user', { inlineData: { mimeType: a.mime, data: a.data } });
+      push('user', { text: textWithFiles(m.text, m.attachments) });
+    }
     else if (m.role === 'tool') push('user', { functionResponse: { name: m.name, response: { result: m.result } } });
     else {
       if (m.text) push('model', { text: m.text });

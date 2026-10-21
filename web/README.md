@@ -9,6 +9,7 @@ Same idea as the Android app: bring your own key, keep everything on your device
 - **Neon intro, name step and time-of-day greeting**, like the Android app.
 - **Providers:** Google (Gemini), OpenAI, Anthropic, DeepSeek, Qwen, Groq, Ollama, Open Router, OpenCode Go, plus custom OpenAI-, Anthropic- or Google-compatible endpoints.
 - **Streaming replies**, a stop button, and a model picker (fetch models or type an id).
+- **Attachments:** photos (resized to 2048 px, HEIC becomes JPEG), text and code files (added to the message like on Android), and PDFs for Anthropic, Google, OpenAI and Open Router.
 - **Branching:** edit a message or regenerate a reply without losing the old branch. Switch with ‹ 1/2 ›.
 - **Memory:** the same memory tools as Android (memory files + active memory).
 - **Web search:** the provider's built-in search (Google, Anthropic, Open Router), or Tavily, Brave, Serper, SearXNG.

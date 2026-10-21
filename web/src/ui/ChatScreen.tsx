@@ -5,7 +5,10 @@ import { greetingFor } from '../core/greeting';
 import { isIos, isStandalone } from '../core/platform';
 import { useStore } from '../core/store';
 import { activePath } from '../core/tree';
-import { MessageView } from './MessageView';
+import { AttachmentChips, MessageView } from './MessageView';
+import { MAX_ATTACHMENTS, processFile } from '../core/attachments';
+import type { Attachment } from '../core/types';
+import { toast } from './toast';
 import { ModelSheet } from './ModelSheet';
 import { Settings } from './Settings';
 
@@ -17,6 +20,9 @@ export function ChatScreen({ name, onName }: { name: string; onName: (n: string)
   const [models, setModels] = useState(false);
   const [settings, setSettings] = useState(false);
   const [draft, setDraft] = useState('');
+  const [files, setFiles] = useState<Attachment[]>([]);
+  const [processing, setProcessing] = useState(0);
+  const fileInput = useRef<HTMLInputElement>(null);
   const scroller = useRef<HTMLElement>(null);
   const stick = useRef(true);
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -39,12 +45,30 @@ export function ChatScreen({ name, onName }: { name: string; onName: (n: string)
     ta.style.height = Math.min(ta.scrollHeight, window.innerHeight * 0.4) + 'px';
   }, [draft]);
 
+  const canSend = !busy && processing === 0 && (!!draft.trim() || files.length > 0);
   const submit = () => {
-    if (busy || !draft.trim()) return;
+    if (!canSend) return;
     const text = draft;
+    const attached = files;
     setDraft('');
+    setFiles([]);
     stick.current = true;
-    send(text);
+    send(text, attached);
+  };
+
+  const addFiles = async (list: FileList | null) => {
+    const picked = Array.from(list ?? []).slice(0, Math.max(0, MAX_ATTACHMENTS - files.length));
+    if (list && list.length > picked.length) toast(`Up to ${MAX_ATTACHMENTS} attachments per message`);
+    setProcessing((n) => n + picked.length);
+    for (const f of picked) {
+      try {
+        const a = await processFile(f);
+        setFiles((prev) => [...prev, a]);
+      } catch (e) {
+        toast((e as Error).message, 4000);
+      }
+      setProcessing((n) => n - 1);
+    }
   };
 
   return (
@@ -70,14 +94,24 @@ export function ChatScreen({ name, onName }: { name: string; onName: (n: string)
         )}
       </main>
       <footer class="bottom">
+        {(files.length > 0 || processing > 0) && (
+          <div class="attach-row" data-testid="composer-attachments">
+            <AttachmentChips attachments={files} onRemove={(id) => setFiles((prev) => prev.filter((a) => a.id !== id))} />
+            {processing > 0 && <span class="subtle">Adding…</span>}
+          </div>
+        )}
         <form class="composer" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+          <button type="button" class="attach" aria-label="Attach files" data-testid="attach" onClick={() => fileInput.current?.click()}>＋</button>
+          <input ref={fileInput} type="file" multiple hidden data-testid="attach-input"
+            accept="image/*,application/pdf,text/*,.md,.csv,.json,.xml,.yaml,.yml,.toml,.log,.py,.js,.ts,.tsx,.jsx,.java,.kt,.swift,.go,.rs,.c,.cpp,.h,.cs,.php,.rb,.sh,.sql,.html,.css"
+            onChange={(e) => { const input = e.target as HTMLInputElement; addFiles(input.files).finally(() => { input.value = ''; }); }} />
           <textarea ref={taRef} rows={1} placeholder="Message" data-testid="composer" value={draft}
             onInput={(e) => setDraft((e.target as HTMLTextAreaElement).value)}
             onKeyDown={(e) => { if (finePointer && e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submit(); } }} />
           {busy ? (
             <button type="button" class="send stop" aria-label="Stop" data-testid="stop" onClick={() => stop()}>■</button>
           ) : (
-            <button type="submit" class="send" aria-label="Send" data-testid="send" disabled={!draft.trim()}>↑</button>
+            <button type="submit" class="send" aria-label="Send" data-testid="send" disabled={!canSend}>↑</button>
           )}
         </form>
       </footer>

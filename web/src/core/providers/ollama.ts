@@ -1,5 +1,6 @@
 // Ollama native /api/chat adapter (NDJSON stream). Mirrors Android OllamaProvider. Licensed under GPL-3.0.
 import type { ChatRequest, ProviderAdapter, StreamEvent, ToolCall, WireMessage } from '../types';
+import { binaryParts, textWithFiles } from '../attachments';
 import { getJson, newId, postJson, safeParseArgs, trimBase } from './http';
 import { readNdjson } from './sse';
 
@@ -7,7 +8,10 @@ export function toOllamaMessages(system: string | undefined, messages: WireMessa
   const out: unknown[] = [];
   if (system) out.push({ role: 'system', content: system });
   for (const m of messages) {
-    if (m.role === 'user') out.push({ role: 'user', content: m.text });
+    if (m.role === 'user') {
+      const images = binaryParts(m.attachments).filter((a) => a.kind === 'image').map((a) => a.data);
+      out.push({ role: 'user', content: textWithFiles(m.text, m.attachments), ...(images.length ? { images } : {}) });
+    }
     else if (m.role === 'tool') out.push({ role: 'tool', content: m.result, tool_name: m.name });
     else {
       const msg: Record<string, unknown> = { role: 'assistant', content: m.text };

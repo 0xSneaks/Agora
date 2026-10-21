@@ -1,6 +1,7 @@
 // Anthropic Messages adapter (Anthropic and custom Anthropic-compatible). Mirrors Android
 // AnthropicProvider. Licensed under GPL-3.0.
 import type { ChatRequest, ProviderAdapter, StreamEvent, WireMessage } from '../types';
+import { binaryParts, textWithFiles } from '../attachments';
 import { getJson, postJson, safeParseArgs, trimBase } from './http';
 import { readSse } from './sse';
 
@@ -14,7 +15,14 @@ export function toAnthropicMessages(messages: WireMessage[]): { role: 'user' | '
     else out.push({ role, content: [block] });
   };
   for (const m of messages) {
-    if (m.role === 'user') push('user', { type: 'text', text: m.text });
+    if (m.role === 'user') {
+      for (const a of binaryParts(m.attachments)) {
+        push('user', a.kind === 'image'
+          ? { type: 'image', source: { type: 'base64', media_type: a.mime, data: a.data } }
+          : { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: a.data }, title: a.name });
+      }
+      push('user', { type: 'text', text: textWithFiles(m.text, m.attachments) });
+    }
     else if (m.role === 'tool') push('user', { type: 'tool_result', tool_use_id: m.callId, content: m.result });
     else {
       if (m.text) push('assistant', { type: 'text', text: m.text });

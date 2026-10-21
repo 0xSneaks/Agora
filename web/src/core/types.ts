@@ -23,6 +23,21 @@ export type Part =
   | { type: 'thought'; text: string }
   | { type: 'tool'; call: ToolCall; status: 'running' | 'done' | 'error'; result?: string };
 
+/** A file attached to a user message. Images and PDFs keep base64 data; text files keep their text. */
+export interface Attachment {
+  id: string;
+  kind: 'image' | 'pdf' | 'text';
+  name: string;
+  mime: string;
+  size: number;
+  /** Base64 (no data: prefix) for images and PDFs. */
+  data?: string;
+  /** Contents of a text file. */
+  text?: string;
+  width?: number;
+  height?: number;
+}
+
 export type MessageStatus = 'streaming' | 'done' | 'stopped' | 'error';
 
 export interface Message {
@@ -32,6 +47,7 @@ export interface Message {
   role: 'user' | 'assistant';
   /** User text. Assistant output lives in `parts`. */
   text: string;
+  attachments?: Attachment[];
   parts: Part[];
   createdAt: number;
   status: MessageStatus;
@@ -53,7 +69,7 @@ export interface Conversation {
 
 /** Provider-neutral transcript passed to adapters. */
 export type WireMessage =
-  | { role: 'user'; text: string }
+  | { role: 'user'; text: string; attachments?: Attachment[] }
   | { role: 'assistant'; text: string; toolCalls?: ToolCall[] }
   | { role: 'tool'; callId: string; name: string; result: string };
 

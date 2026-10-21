@@ -2,9 +2,24 @@
 import { useMemo, useState } from 'preact/hooks';
 import { renderMarkdown } from '../core/markdown';
 import { siblingInfo } from '../core/tree';
-import type { Message, Part } from '../core/types';
+import type { Attachment, Message, Part } from '../core/types';
 import { editMessage, regenerate, switchBranch } from '../core/chat';
 import { toast } from './toast';
+
+export function AttachmentChips({ attachments, onRemove }: { attachments: Attachment[]; onRemove?: (id: string) => void }) {
+  return (
+    <div class="chips">
+      {attachments.map((a) => (
+        <div class={'chip' + (a.kind === 'image' ? ' img' : '')} key={a.id} data-testid="attachment-chip" title={a.name}>
+          {a.kind === 'image' && a.data
+            ? <img src={`data:${a.mime};base64,${a.data}`} alt={a.name} />
+            : <span class="file">{a.kind === 'pdf' ? '📕' : '📄'} {a.name}</span>}
+          {onRemove && <button type="button" aria-label={`Remove ${a.name}`} onClick={() => onRemove(a.id)}>✕</button>}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function copy(text: string) {
   navigator.clipboard?.writeText(text).then(() => toast('Copied'), () => toast('Copy failed'));
@@ -51,11 +66,14 @@ export function MessageView({ msg, all, busy }: { msg: Message; all: Map<string,
             <textarea class="textarea" data-testid="edit-input" value={draft} onInput={(e) => setDraft((e.target as HTMLTextAreaElement).value)} />
             <div class="btn-row" style={{ justifyContent: 'flex-end', marginTop: 6 }}>
               <button class="btn" onClick={() => setEditing(false)}>Cancel</button>
-              <button class="btn primary" data-testid="edit-save" disabled={!draft.trim()} onClick={() => { setEditing(false); editMessage(msg.id, draft); }}>Send</button>
+              <button class="btn primary" data-testid="edit-save" disabled={!draft.trim() && !msg.attachments?.length} onClick={() => { setEditing(false); editMessage(msg.id, draft); }}>Send</button>
             </div>
           </div>
         ) : (
-          <div class="bubble">{msg.text}</div>
+          <>
+            {!!msg.attachments?.length && <AttachmentChips attachments={msg.attachments} />}
+            {msg.text && <div class="bubble">{msg.text}</div>}
+          </>
         )}
         <div class="meta">
           <BranchNav msg={msg} all={all} disabled={busy} />

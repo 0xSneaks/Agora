@@ -154,3 +154,13 @@ a { color: var(--cyan); }
 .branch button:disabled { opacity: .35; }
 .onboard > * { flex-shrink: 0; }
 .onboard > .spacer { flex-shrink: 1; }
+.attach { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); font-size: 22px; flex: none; cursor: pointer; color: var(--text); }
+.attach-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; overflow-x: auto; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.msg.user .chips { justify-content: flex-end; margin-bottom: 6px; }
+.chip { position: relative; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); overflow: hidden; display: flex; align-items: center; }
+.chip.img img { display: block; width: 72px; height: 72px; object-fit: cover; }
+.msg.user .chip.img img { width: 120px; height: 120px; }
+.chip .file { padding: 8px 10px; font-size: 13px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip button { position: absolute; top: 2px; right: 2px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.7); color: #fff; font-size: 12px; cursor: pointer; }
+.chip:not(.img) button { position: static; margin-right: 4px; background: transparent; color: var(--muted); }
