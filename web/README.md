@@ -20,7 +20,7 @@ Same idea as the Android app: bring your own key, keep everything on your device
 ## Privacy and security
 
 - Chats, settings and API keys are stored in this app's storage on your iPhone (IndexedDB).
-- Each key is sent only to the provider it belongs to. No analytics, no relay server.
+- Each key is sent only to the provider it belongs to. No analytics. The one exception is OpenCode Go, which blocks direct browser calls: on a Vercel deployment it goes through this site's own proxy function (`web/api/proxy`, chat and models endpoints only, no logging or storage in the code), so that key passes through the deployment on its way to OpenCode.
 - Optional **passphrase lock** (Settings → Security) encrypts your keys with AES-GCM (PBKDF2, 600,000 rounds). Without it, keys are stored unencrypted in the app's storage.
 
 ## Which providers work from a browser
@@ -32,7 +32,7 @@ A web app can only call a provider that allows browser requests (CORS). Each pro
 | Anthropic, Google | Works (checked live) |
 | OpenAI, Open Router | Expected to work (public reports) |
 | DeepSeek, Qwen, Groq | Not yet checked. Use Test connection |
-| OpenCode Go | Reported blocked in browsers. Needs a proxy |
+| OpenCode Go | Via this site's own proxy (built in; works where the `api/` functions are deployed, e.g. Vercel) |
 | Ollama | Your server must allow this site (`OLLAMA_ORIGINS`) and use HTTPS |
 
 ## Not available on iPhone

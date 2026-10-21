@@ -1,7 +1,7 @@
 // App settings, persisted in IndexedDB. Licensed under GPL-3.0.
 import { kv } from './db';
 import { createStore } from './store';
-import { BUILT_IN_PROVIDERS, customToInfo, type CustomProvider, type ProviderInfo } from './providers/catalog';
+import { BUILT_IN_PROVIDERS, OPENCODE_PROXY_BASE, customToInfo, type CustomProvider, type ProviderInfo } from './providers/catalog';
 
 export interface Settings {
   /** Base URL overrides per provider id. */
@@ -72,7 +72,15 @@ export function providerById(id: string | undefined, s: Settings = settingsStore
 }
 
 export function baseUrlFor(p: ProviderInfo, s: Settings = settingsStore.get()): string {
-  return (s.providerUrls[p.id] ?? '').trim() || p.defaultBaseUrl;
+  const resolved = (s.providerUrls[p.id] ?? '').trim() || p.defaultBaseUrl;
+  // OpenCode Go blocks direct browser calls, so its own upstream URL is
+  // always reached through this deployment's same-origin proxy instead
+  // (see web/api/_opencode-proxy.ts). A different URL typed for this
+  // provider is respected as-is and called directly.
+  if (p.id === 'opencode-go' && resolved.replace(/\/+$/, '') === p.defaultBaseUrl.replace(/\/+$/, '')) {
+    return OPENCODE_PROXY_BASE;
+  }
+  return resolved;
 }
 
 export function addModel(providerId: string, model: string): Promise<Settings> {

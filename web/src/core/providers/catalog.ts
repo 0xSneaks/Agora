@@ -14,7 +14,10 @@ import { openAiAdapter } from './openai';
  * - blocked: documented to fail browser preflight.
  * - local: your own server; it must allow this site's origin and be served over HTTPS.
  */
-export type CorsStatus = 'verified' | 'likely' | 'unverified' | 'blocked' | 'local' | 'custom';
+export type CorsStatus = 'verified' | 'likely' | 'unverified' | 'blocked' | 'local' | 'custom' | 'proxy';
+
+/** Same-origin base the app uses for OpenCode Go; the deployment's proxy function relays it. */
+export const OPENCODE_PROXY_BASE = '/api/proxy';
 
 export interface ProviderInfo {
   id: string;
@@ -41,7 +44,7 @@ export const BUILT_IN_PROVIDERS: ProviderInfo[] = [
     id: 'openrouter', label: 'Open Router', protocol: 'openai', defaultBaseUrl: 'https://openrouter.ai/api/v1', keyRequired: true, builtIn: true, cors: 'likely',
     extraHeaders: { 'HTTP-Referer': 'https://github.com/0xSneaks/0x-sneaky-alpha', 'X-Title': '0x Sneaky Alpha' },
   },
-  { id: 'opencode-go', label: 'OpenCode Go', protocol: 'openai', defaultBaseUrl: 'https://opencode.ai/zen/go/v1', keyRequired: true, builtIn: true, cors: 'blocked', note: 'Reported to fail browser preflight (CORS); needs a proxy' },
+  { id: 'opencode-go', label: 'OpenCode Go', protocol: 'openai', defaultBaseUrl: 'https://opencode.ai/zen/go/v1', keyRequired: true, builtIn: true, cors: 'proxy', note: 'Goes through this site’s own proxy (api/proxy), because OpenCode Go blocks direct browser calls' },
 ];
 
 export interface CustomProvider {
@@ -63,7 +66,7 @@ export const PROTOCOL_LABEL: Record<Protocol, string> = {
 };
 
 export const CORS_LABEL: Record<CorsStatus, string> = {
-  verified: 'Browser OK', likely: 'Browser likely OK', unverified: 'Browser untested', blocked: 'Blocked in browsers', local: 'Your server', custom: 'Custom',
+  verified: 'Browser OK', likely: 'Browser likely OK', unverified: 'Browser untested', blocked: 'Blocked in browsers', local: 'Your server', custom: 'Custom', proxy: 'Via this site’s proxy',
 };
 
 export function adapterFor(protocol: Protocol): ProviderAdapter {
