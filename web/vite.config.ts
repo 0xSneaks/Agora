@@ -1,4 +1,4 @@
-// Sneaks AI web build. Licensed under GPL-3.0.
+// 0x Sneaky Alpha web build. Licensed under GPL-3.0.
 import { defineConfig, type Plugin } from 'vite';
 import preact from '@preact/preset-vite';
 import { createHash } from 'node:crypto';
@@ -15,7 +15,7 @@ function listPublic(dir: string, root = dir): string[] {
 /** Emits sw.js with a precache list of every built file, versioned by content. */
 function serviceWorker(): Plugin {
   return {
-    name: 'sneaks-sw',
+    name: 'app-sw',
     apply: 'build',
     generateBundle(_opts, bundle) {
       const files = ['index.html', ...Object.keys(bundle).filter((f) => f !== 'index.html'), ...listPublic('public')];

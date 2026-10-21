@@ -17,7 +17,7 @@ test('export chats to JSON, delete them, import them back', async ({ page }) => 
   await page.getByTestId('export').click();
   const file = await (await download).path();
   const json = readFileSync(file, 'utf8');
-  expect(JSON.parse(json).format).toBe('sneaks-ai-chats');
+  expect(JSON.parse(json).format).toBe('0x-sneaky-alpha-chats');
   expect(json).not.toContain('mock-key-123456');
 
   page.on('dialog', (d) => d.accept());

@@ -8,7 +8,7 @@ import { del, get, getAllKeys, kv, openDb, put } from './db';
 
 export const PBKDF2_ITERATIONS = 600_000;
 const LOCK_KEY = 'lock';
-const CHECK_TEXT = 'sneaks-ai-lock-check';
+const CHECK_TEXT = '0x-sneaky-alpha-lock-check';
 
 interface LockMeta { v: 1; salt: string; iterations: number; check: Sealed }
 interface Sealed { iv: string; ct: string }

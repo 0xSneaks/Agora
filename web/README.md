@@ -1,6 +1,6 @@
-# Sneaks AI for iPhone (web app)
+# 0x Sneaky Alpha for iPhone (web app)
 
-Sneaks AI as an installable web app (PWA) for iPhone. Open it once in Safari, tap **Share → Add to Home Screen**, and it runs full screen like a normal app. No Mac, no App Store, no Apple developer account.
+0x Sneaky Alpha as an installable web app (PWA) for iPhone. Open it once in Safari, tap **Share → Add to Home Screen**, and it runs full screen like a normal app. No Mac, no App Store, no Apple developer account.
 
 Same idea as the Android app: bring your own key, keep everything on your device.
 
@@ -57,7 +57,7 @@ npm run build       # output in web/dist
 npx playwright test --project=webkit-iphone   # end-to-end, iPhone + WebKit
 ```
 
-`web/dist` is a static site. Host it on any HTTPS static host (GitHub Pages, Vercel, Netlify). The build uses relative paths, so it also works from a sub-folder like `/Agora/`.
+`web/dist` is a static site. Host it on any HTTPS static host (GitHub Pages, Vercel, Netlify). The build uses relative paths, so it also works from a sub-folder.
 
 See [INSTALL-IPHONE.md](INSTALL-IPHONE.md) for install steps.
 

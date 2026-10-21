@@ -4,7 +4,7 @@ import { LIT_MS, LOAD_MS, glitchIntensity, loadProgress, loadingUiAlpha, tubeAlp
 
 describe('greeting (matches Android Greeting.kt)', () => {
   it('uses the welcome line without a name', () => {
-    expect(greetingFor(9, '  ')).toBe('Welcome to Sneaks AI.');
+    expect(greetingFor(9, '  ')).toBe('Welcome to 0x Sneaky Alpha.');
   });
   it.each([
     [5, 'Good morning, Neo'], [11, 'Good morning, Neo'], [12, 'Good afternoon, Neo'], [16, 'Good afternoon, Neo'],

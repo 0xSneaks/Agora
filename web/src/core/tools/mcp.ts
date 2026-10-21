@@ -34,7 +34,7 @@ export class McpClient {
       await this.request('initialize', {
         protocolVersion: MCP_PROTOCOL_VERSION,
         capabilities: {},
-        clientInfo: { name: 'Sneaks AI', version: '1.0' },
+        clientInfo: { name: '0x Sneaky Alpha', version: '1.0' },
       });
       await this.notify('notifications/initialized');
     })().catch((e) => {

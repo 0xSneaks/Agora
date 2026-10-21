@@ -1,4 +1,4 @@
-// Sneaks AI web app root. Licensed under GPL-3.0.
+// 0x Sneaky Alpha web app root. Licensed under GPL-3.0.
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { Intro } from './ui/Intro';
 import { ChatScreen } from './ui/ChatScreen';

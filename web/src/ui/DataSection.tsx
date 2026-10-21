@@ -33,7 +33,7 @@ export function DataSection() {
       <div class="btn-row">
         <button class="btn" data-testid="export" onClick={async () => {
           const data = await exportAll();
-          await shareOrDownload(`sneaks-ai-chats-${data.exportedAt.slice(0, 10)}.json`, JSON.stringify(data, null, 2));
+          await shareOrDownload(`0x-sneaky-alpha-chats-${data.exportedAt.slice(0, 10)}.json`, JSON.stringify(data, null, 2));
         }}>Export chats</button>
         <button class="btn" data-testid="import" onClick={() => input.current?.click()}>Import chats</button>
         <input ref={input} type="file" accept="application/json,.json" style={{ display: 'none' }} data-testid="import-file" onChange={async (e) => {

@@ -39,7 +39,7 @@ export const BUILT_IN_PROVIDERS: ProviderInfo[] = [
   { id: 'ollama', label: 'Ollama', protocol: 'ollama', defaultBaseUrl: 'http://localhost:11434', keyRequired: false, builtIn: true, cors: 'local', note: 'Your server must allow this site (OLLAMA_ORIGINS) and use HTTPS' },
   {
     id: 'openrouter', label: 'Open Router', protocol: 'openai', defaultBaseUrl: 'https://openrouter.ai/api/v1', keyRequired: true, builtIn: true, cors: 'likely',
-    extraHeaders: { 'HTTP-Referer': 'https://github.com/0xSneaks/Agora', 'X-Title': 'Sneaks AI' },
+    extraHeaders: { 'HTTP-Referer': 'https://github.com/0xSneaks/0x-sneaky-alpha', 'X-Title': '0x Sneaky Alpha' },
   },
   { id: 'opencode-go', label: 'OpenCode Go', protocol: 'openai', defaultBaseUrl: 'https://opencode.ai/zen/go/v1', keyRequired: true, builtIn: true, cors: 'blocked', note: 'Reported to fail browser preflight (CORS); needs a proxy' },
 ];

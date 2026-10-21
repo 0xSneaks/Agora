@@ -168,10 +168,10 @@ function SecuritySection() {
 function About() {
   return (
     <div class="subtle" data-testid="about">
-      <p><b>Sneaks AI</b> (web) — Modified Version.</p>
-      <p>Sneaks AI is a modified version of <a href="https://github.com/newo-ether/Agora" target="_blank" rel="noopener noreferrer">Agora</a> by newo-ether and the Agora contributors, licensed under the GNU General Public License v3.0. It is not affiliated with or endorsed by the original author.</p>
+      <p><b>0x Sneaky Alpha</b> — Modified Version.</p>
+      <p>Based on <a href="https://github.com/newo-ether/Agora" target="_blank" rel="noopener noreferrer">Agora</a> (GPL-3.0). Not affiliated with the original author.</p>
       <p>This program comes with ABSOLUTELY NO WARRANTY. It is free software: you can redistribute it and/or modify it under the terms of the <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener noreferrer">GPL-3.0</a>.</p>
-      <p>Source: <a href="https://github.com/0xSneaks/Agora" target="_blank" rel="noopener noreferrer">github.com/0xSneaks/Agora</a></p>
+      <p>Source: <a href="https://github.com/0xSneaks/0x-sneaky-alpha" target="_blank" rel="noopener noreferrer">github.com/0xSneaks/0x-sneaky-alpha</a></p>
       <p>No analytics, no relay server. The app only talks to the providers, search services and MCP servers you configure.</p>
     </div>
   );

@@ -36,7 +36,7 @@ describe('export / import', () => {
   });
 
   it('rejects other files', async () => {
-    await expect(importAll('{"hello":1}')).rejects.toThrow(/not a Sneaks AI/);
+    await expect(importAll('{"hello":1}')).rejects.toThrow(/not a 0x Sneaky Alpha/);
     await expect(importAll('nope')).rejects.toThrow(/JSON/);
   });
 });

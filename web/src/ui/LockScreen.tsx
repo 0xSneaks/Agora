@@ -14,7 +14,7 @@ export function LockScreen({ onUnlocked }: { onUnlocked: () => void }) {
       if (await unlock(pass)) onUnlocked(); else setErr('Wrong passphrase');
       setBusy(false);
     }}>
-      <h2>🔒 Sneaks AI is locked</h2>
+      <h2>🔒 0x Sneaky Alpha is locked</h2>
       <p class="subtle">Enter your passphrase to unlock your API keys.</p>
       <input class="input" type="password" autocomplete="current-password" data-testid="unlock-pass" value={pass} onInput={(e) => setPass((e.target as HTMLInputElement).value)} />
       {err && <p class="err" style={{ color: 'var(--danger)' }}>{err}</p>}

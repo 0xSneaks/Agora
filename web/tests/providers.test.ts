@@ -74,9 +74,9 @@ describe('OpenAI-compatible adapter', () => {
 
   it('adds OpenRouter headers and web plugin', async () => {
     const calls = mockFetch(() => new Response(streamOf(sse([]))));
-    await collect(openAiAdapter.stream({ ...base, providerId: 'openrouter', nativeSearch: true, extraHeaders: { 'X-Title': 'Sneaks AI' } }, sig()));
+    await collect(openAiAdapter.stream({ ...base, providerId: 'openrouter', nativeSearch: true, extraHeaders: { 'X-Title': '0x Sneaky Alpha' } }, sig()));
     expect(JSON.parse(String(calls[0].init.body)).plugins).toEqual([{ id: 'web' }]);
-    expect((calls[0].init.headers as Record<string, string>)['X-Title']).toBe('Sneaks AI');
+    expect((calls[0].init.headers as Record<string, string>)['X-Title']).toBe('0x Sneaky Alpha');
   });
 });
 

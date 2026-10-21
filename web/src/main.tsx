@@ -1,4 +1,4 @@
-// Sneaks AI web entry point. Licensed under GPL-3.0.
+// 0x Sneaky Alpha web entry point. Licensed under GPL-3.0.
 import { render } from 'preact';
 import { App } from './app';
 import './styles.css';

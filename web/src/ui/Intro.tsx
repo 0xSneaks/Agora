@@ -1,5 +1,5 @@
 // Neon launch intro: the portrait glitches in while a neon bar fills, then the sign flickers on.
-// Canvas port of the Android SneaksIntro.kt. Tap to skip; reduced motion shows the final frame.
+// Canvas port of the Android launch intro. Tap to skip; reduced motion shows the final frame.
 // Licensed under GPL-3.0.
 import { useEffect, useRef } from 'preact/hooks';
 import {
@@ -158,7 +158,7 @@ function drawLoadingUi(
   ctx.shadowColor = NEON_PINK;
   ctx.shadowBlur = 22 * u;
   let px = 54 * u;
-  const title = `OxSneakyAlpha Loading... ${Math.floor(p * 100)}%`;
+  const title = `0x Sneaky Alpha Loading... ${Math.floor(p * 100)}%`;
   ctx.font = `italic bold ${px}px ${FONT}`;
   const tw = ctx.measureText(title).width;
   if (tw > side * 0.94) {

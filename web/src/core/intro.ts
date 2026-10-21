@@ -1,4 +1,4 @@
-// Timing curves for the neon launch intro, ported from the Android SneaksIntro.kt. Licensed under GPL-3.0.
+// Timing curves for the neon launch intro, ported from the Android launch intro. Licensed under GPL-3.0.
 
 export const LOAD_MS = 2400;
 export const SIGN_START_MS = LOAD_MS + 150;

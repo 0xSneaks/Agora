@@ -1,6 +1,6 @@
 // Small promise wrapper over IndexedDB. Licensed under GPL-3.0.
 
-export const DB_NAME = 'sneaks-ai';
+export const DB_NAME = '0x-sneaky-alpha';
 const DB_VERSION = 1;
 
 export type StoreName = 'kv' | 'secrets' | 'conversations' | 'messages' | 'memory';

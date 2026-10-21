@@ -4,7 +4,7 @@ import { newId } from './providers/http';
 import type { MemoryFile } from './tools/memory';
 import type { Conversation, Message } from './types';
 
-export const EXPORT_FORMAT = 'sneaks-ai-chats';
+export const EXPORT_FORMAT = '0x-sneaky-alpha-chats';
 export const EXPORT_VERSION = 1;
 
 export interface ExportFile {
@@ -48,7 +48,7 @@ export async function importAll(raw: string): Promise<{ conversations: number; m
     throw new Error('Not a JSON file.');
   }
   if (data?.format !== EXPORT_FORMAT || !Array.isArray(data.conversations) || !Array.isArray(data.messages)) {
-    throw new Error('This is not a Sneaks AI chat export.');
+    throw new Error('This is not a 0x Sneaky Alpha chat export.');
   }
   if (data.version > EXPORT_VERSION) throw new Error('This export is from a newer version of the app.');
   const convs = (data.conversations as unknown[]).filter(validConversation);

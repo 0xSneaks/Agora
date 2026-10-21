@@ -1,12 +1,12 @@
-# Install Sneaks AI on your iPhone
+# Install 0x Sneaky Alpha on your iPhone
 
 You need the app's web address (the HTTPS link where it's hosted).
 
 1. Open **Safari** on your iPhone (it must be Safari).
-2. Go to the Sneaks AI link.
+2. Go to the 0x Sneaky Alpha link.
 3. Tap the **Share** button (square with an arrow).
 4. Scroll down and tap **Add to Home Screen**, then **Add**.
-5. Open **Sneaks AI** from your Home Screen. The neon intro plays.
+5. Open **0x Sneaky Alpha** from your Home Screen. The neon intro plays.
 6. Follow the welcome steps: your name (optional), pick a provider, paste your API key, pick a model.
 7. Start chatting.
 

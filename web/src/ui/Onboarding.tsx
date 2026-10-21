@@ -34,7 +34,7 @@ export function Onboarding({ onDone, onName }: { onDone: () => void; onName: (n:
     switch (step) {
       case 'welcome':
         return (<>
-          <h1>Welcome to Sneaks AI</h1>
+          <h1>Welcome to 0x Sneaky Alpha</h1>
           <p class="subtle">A BYOK app that takes back your data sovereignty.</p>
           <p class="subtle">Bring your own key. Chats, settings and keys stay on this iPhone; requests go straight to the provider you choose.</p>
           <div class="spacer" />

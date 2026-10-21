@@ -1,10 +1,10 @@
 /*
- * Sneaks AI service worker. Licensed under GPL-3.0.
+ * 0x Sneaky Alpha service worker. Licensed under GPL-3.0.
  * Caches only this app's own files so the shell opens offline. It never touches
  * cross-origin requests, so provider calls (and the API keys in them) bypass it.
  */
 const VERSION = '__VERSION__';
-const CACHE = 'sneaks-shell-' + VERSION;
+const CACHE = '0x-sneaky-alpha-shell-' + VERSION;
 const PRECACHE = __PRECACHE__;
 
 self.addEventListener('install', (event) => {
@@ -17,7 +17,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('sneaks-shell-') && k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('0x-sneaky-alpha-shell-') && k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
