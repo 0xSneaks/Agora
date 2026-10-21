@@ -26,7 +26,9 @@ There is no analytics and no relay server. The app only contacts the providers, 
 
 ## Install
 
-Build it yourself (below), or check this repository's **Releases** page when a signed build is published. Android only.
+Build it yourself (below), or check this repository's **Releases** page when a signed build is published.
+
+**iPhone:** there's an installable web app version in [`web/`](web/README.md). Open it in Safari and tap **Share → Add to Home Screen**. See [web/INSTALL-IPHONE.md](web/INSTALL-IPHONE.md).
 
 ## Build from source
 

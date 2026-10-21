@@ -3,6 +3,7 @@ import { h } from 'preact';
 import { installToolHost } from './core/tools/host';
 import { extraSections } from './ui/Settings';
 import { McpSection, MemorySection, SearchSection } from './ui/ToolsSettings';
+import { DataSection } from './ui/DataSection';
 
 let installed = false;
 
@@ -14,5 +15,6 @@ export function installFeatures(): void {
     { title: 'Memory', render: () => h(MemorySection, {}) },
     { title: 'Web search', render: () => h(SearchSection, {}) },
     { title: 'MCP servers', render: () => h(McpSection, {}) },
+    { title: 'Data', render: () => h(DataSection, {}) },
   );
 }
