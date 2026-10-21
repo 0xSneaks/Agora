@@ -14,6 +14,24 @@ export interface Settings {
   systemPrompt: string;
   temperature?: number;
   maxTokens?: number;
+  /** Memory tools + active memory in the system prompt (Android: Memory settings). */
+  memoryEnabled: boolean;
+  /** Generic web search tool provider. */
+  searchProvider: SearchProvider;
+  searxngUrl: string;
+  /** Provider-hosted search: Gemini grounding, Anthropic web_search, Open Router web plugin. */
+  nativeSearch: boolean;
+  mcpServers: McpServer[];
+}
+
+export type SearchProvider = 'off' | 'tavily' | 'brave' | 'serper' | 'searxng';
+
+export interface McpServer {
+  id: string;
+  name: string;
+  url: string;
+  transport: 'http' | 'sse';
+  enabled: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -21,6 +39,11 @@ export const DEFAULT_SETTINGS: Settings = {
   customProviders: [],
   models: {},
   systemPrompt: '',
+  memoryEnabled: true,
+  searchProvider: 'off',
+  searxngUrl: '',
+  nativeSearch: false,
+  mcpServers: [],
 };
 
 export const settingsStore = createStore<Settings>(DEFAULT_SETTINGS);

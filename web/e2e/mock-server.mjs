@@ -5,7 +5,7 @@ import http from 'node:http';
 const port = Number(process.env.MOCK_PORT ?? 4174);
 const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type, accept',
+  'Access-Control-Allow-Headers': 'authorization, content-type, accept, mcp-session-id, mcp-protocol-version',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
@@ -21,6 +21,23 @@ http.createServer((req, res) => {
     req.on('end', () => {
       const j = JSON.parse(body);
       const last = [...j.messages].reverse().find((m) => m.role === 'user')?.content ?? '';
+      const lastMsg = j.messages[j.messages.length - 1];
+      const toolNames = (j.tools ?? []).map((t) => t.function.name);
+      const call = (name, args) => {
+        res.writeHead(200, { ...cors, 'Content-Type': 'text/event-stream' });
+        res.write(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'call_1', function: { name, arguments: '' } }] } }] })}\n\n`);
+        res.write(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, function: { arguments: JSON.stringify(args) } }] }, finish_reason: 'tool_calls' }] })}\n\n`);
+        res.end('data: [DONE]\n\n');
+      };
+      if (lastMsg.role === 'tool') {
+        res.writeHead(200, { ...cors, 'Content-Type': 'text/event-stream' });
+        res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: `Tool said: ${lastMsg.content}` } }] })}\n\n`);
+        return res.end('data: [DONE]\n\n');
+      }
+      const remember = last.match(/^remember (.+)$/);
+      if (remember && toolNames.includes('update_active_memory')) return call('update_active_memory', { content: remember[1], mode: 'append' });
+      const mcpTool = toolNames.find((n) => n.startsWith('mcp_'));
+      if (/^use mcp/.test(last) && mcpTool) return call(mcpTool, { text: 'from model' });
       const slow = /slow/.test(last);
       const words = slow ? Array.from({ length: 70 }, (_, i) => `w${i} `) : `Echo: ${last}`.split(/(?<= )/);
       res.writeHead(200, { ...cors, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' });
@@ -36,6 +53,21 @@ http.createServer((req, res) => {
         }
       };
       tick();
+    });
+    return;
+  }
+  if (req.url === '/mcp' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => (body += c));
+    req.on('end', () => {
+      const msg = JSON.parse(body);
+      const h = { ...cors, 'Access-Control-Expose-Headers': 'Mcp-Session-Id', 'Content-Type': 'application/json', 'Mcp-Session-Id': 'mock-session' };
+      if (!('id' in msg)) { res.writeHead(202, cors); return res.end(); }
+      const result = msg.method === 'initialize' ? { protocolVersion: '2025-06-18', capabilities: { tools: {} }, serverInfo: { name: 'mock', version: '1' } }
+        : msg.method === 'tools/list' ? { tools: [{ name: 'echo', description: 'Echo text', inputSchema: { type: 'object', properties: { text: { type: 'string' } } } }] }
+          : { content: [{ type: 'text', text: `mcp echo: ${msg.params?.arguments?.text}` }] };
+      res.writeHead(200, h);
+      res.end(JSON.stringify({ jsonrpc: '2.0', id: msg.id, result }));
     });
     return;
   }
