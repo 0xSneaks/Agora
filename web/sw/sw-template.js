@@ -29,12 +29,12 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   if (req.mode === 'navigate') {
     event.respondWith(
-      caches.match('./index.html').then((hit) => hit || fetch(req)),
+      caches.match('./index.html', { ignoreVary: true }).then((hit) => hit || fetch(req)),
     );
     return;
   }
   event.respondWith(
-    caches.match(req, { ignoreSearch: true }).then((hit) => hit || fetch(req)),
+    caches.match(req, { ignoreSearch: true, ignoreVary: true }).then((hit) => hit || fetch(req)),
   );
 });
 

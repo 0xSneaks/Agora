@@ -18,19 +18,21 @@ test('PWA shell: iOS meta tags, manifest, icon, offline reload', async ({ page, 
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
   await context.setOffline(true);
   await page.reload();
-  await expect(page.getByTestId('greeting')).toBeVisible();
+  await page.getByTestId('intro').click();
+  await expect(page.getByTestId('ob-start')).toBeVisible();
   await context.setOffline(false);
 });
 
 test('standalone launch shows the app, not the install hint', async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'standalone', { get: () => true }));
   await page.goto('./');
-  await expect(page.locator('.shell')).toHaveAttribute('data-standalone', 'true');
+  await expect(page.locator('.app-root')).toHaveAttribute('data-standalone', 'true');
   await expect(page.getByTestId('install-hint')).toHaveCount(0);
 });
 
 test('in Safari (not installed) the install hint shows', async ({ page }) => {
   await page.goto('./');
-  await expect(page.locator('.shell')).toHaveAttribute('data-standalone', 'false');
+  await page.getByTestId('intro').click();
+  await expect(page.locator('.app-root')).toHaveAttribute('data-standalone', 'false');
   await expect(page.getByTestId('install-hint')).toBeVisible();
 });

@@ -12,12 +12,15 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   use: { baseURL: 'http://127.0.0.1:4173/', trace: 'off' },
-  webServer: {
-    command: 'npm run build && npx vite preview --host 127.0.0.1 --port 4173 --strictPort',
-    url: 'http://127.0.0.1:4173/',
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      command: 'npm run build && npx vite preview --host 127.0.0.1 --port 4173 --strictPort',
+      url: 'http://127.0.0.1:4173/',
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+    { command: 'node e2e/mock-server.mjs', url: 'http://127.0.0.1:4174/v1/models', reuseExistingServer: true },
+  ],
   projects: [
     { name: 'webkit-iphone', use: { ...iphone } },
     {

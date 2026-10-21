@@ -1,0 +1,61 @@
+// App settings, persisted in IndexedDB. Licensed under GPL-3.0.
+import { kv } from './db';
+import { createStore } from './store';
+import { BUILT_IN_PROVIDERS, customToInfo, type CustomProvider, type ProviderInfo } from './providers/catalog';
+
+export interface Settings {
+  /** Base URL overrides per provider id. */
+  providerUrls: Record<string, string>;
+  customProviders: CustomProvider[];
+  /** Known model ids per provider (fetched or typed). */
+  models: Record<string, string[]>;
+  defaultProviderId?: string;
+  defaultModel?: string;
+  systemPrompt: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+export const DEFAULT_SETTINGS: Settings = {
+  providerUrls: {},
+  customProviders: [],
+  models: {},
+  systemPrompt: '',
+};
+
+export const settingsStore = createStore<Settings>(DEFAULT_SETTINGS);
+
+export async function loadSettings(): Promise<Settings> {
+  const saved = await kv.get<Partial<Settings>>('settings');
+  const merged = { ...DEFAULT_SETTINGS, ...(saved ?? {}) } as Settings;
+  settingsStore.set(merged);
+  return merged;
+}
+
+export async function updateSettings(patch: Partial<Settings> | ((s: Settings) => Partial<Settings>)): Promise<Settings> {
+  const prev = settingsStore.get();
+  const next = { ...prev, ...(typeof patch === 'function' ? patch(prev) : patch) };
+  settingsStore.set(next);
+  await kv.set('settings', next);
+  return next;
+}
+
+export function allProviders(s: Settings = settingsStore.get()): ProviderInfo[] {
+  return [...BUILT_IN_PROVIDERS, ...s.customProviders.map(customToInfo)];
+}
+
+export function providerById(id: string | undefined, s: Settings = settingsStore.get()): ProviderInfo | undefined {
+  return id ? allProviders(s).find((p) => p.id === id) : undefined;
+}
+
+export function baseUrlFor(p: ProviderInfo, s: Settings = settingsStore.get()): string {
+  return (s.providerUrls[p.id] ?? '').trim() || p.defaultBaseUrl;
+}
+
+export function addModel(providerId: string, model: string): Promise<Settings> {
+  return updateSettings((s) => {
+    const list = new Set(s.models[providerId] ?? []);
+    list.add(model);
+    return { models: { ...s.models, [providerId]: [...list].sort() } };
+  });
+}

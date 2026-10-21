@@ -25,7 +25,9 @@ body {
   font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   padding: var(--sat) var(--sar) 0 var(--sal);
 }
-#app { height: 100%; }
+#app, .app-root { height: 100%; }
+.app-root { display: flex; flex-direction: column; }
+.app-root > .shell, .app-root > .onboard { flex: 1; min-height: 0; }
 button, input, textarea, select { font: inherit; color: inherit; }
 input, textarea, select { font-size: 16px; } /* 16px stops iOS zoom-on-focus */
 a { color: var(--cyan); }
@@ -148,3 +150,7 @@ a { color: var(--cyan); }
 .onboard h1 { font-size: 26px; margin: 8vh 0 6px; color: var(--pink-core); text-shadow: 0 0 10px var(--pink); }
 .onboard .spacer { flex: 1; }
 .lock { max-width: 420px; margin: 20vh auto 0; padding: 0 18px; text-align: center; }
+.branch { display: inline-flex; align-items: center; gap: 0; font-variant-numeric: tabular-nums; }
+.branch button:disabled { opacity: .35; }
+.onboard > * { flex-shrink: 0; }
+.onboard > .spacer { flex-shrink: 1; }
