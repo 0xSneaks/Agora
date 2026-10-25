@@ -8,6 +8,7 @@ import com.newoether.agora.model.MessageStatus
 import com.newoether.agora.model.isContextCompact
 import com.newoether.agora.model.isSuccessfulContextCompact
 import com.newoether.agora.util.Constants
+import com.newoether.agora.util.DebugLog
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import java.util.UUID
@@ -45,6 +46,7 @@ internal class ConversationCompactController(
             return CompactResult.NotNeeded
         }
         val snapshot = automaticSnapshot(conversationId, config)
+            ?: return CompactResult.Failed(CompactFailureReason.SETUP_FAILED)
         return launch(
             conversationId = conversationId,
             request = config.request,
@@ -68,7 +70,7 @@ internal class ConversationCompactController(
         alreadyHoldsConversationLock: Boolean = false,
     ): StandardCompactLaunch? {
         if (!operation.automaticNeeded(conversationId, contextLimit, config)) return null
-        val snapshot = automaticSnapshot(conversationId, config)
+        val snapshot = automaticSnapshot(conversationId, config) ?: return null
         return launch(
             conversationId = conversationId,
             request = config.request,
@@ -216,19 +218,41 @@ internal class ConversationCompactController(
         return compactLaunch to result
     }
 
+    /**
+     * Builds the automatic-Compact admission snapshot, or null when admission is
+     * impossible — e.g. the saved Compact model points at a provider that no longer
+     * exists, so [GenerationAdmissionSnapshot]'s provider check throws. Automatic
+     * Compact runs inside other flows (send, continuation, headless tasks) that have
+     * no caller able to recover from an exception here: an uncaught throw used to
+     * kill the whole process (the "Nemo keeps crashing" bug — a stale Compact model
+     * left pointing at a deleted provider crashed every over-threshold send).
+     * Failing soft mirrors [manual]: before-send callers get SETUP_FAILED, standard
+     * callers get null, and the conversation itself is left untouched.
+     */
     private fun automaticSnapshot(
         conversationId: String,
         config: AutomaticCompactConfig,
-    ): GenerationAdmissionSnapshot = GenerationAdmissionSnapshot(
-        conversationId = conversationId,
-        runId = "compact_preflight_${UUID.randomUUID()}",
-        selectedModelId = config.request.model,
-        config = config.generationConfig,
-        context = config.generationContext,
-        providerInstances = config.providerInstances,
-        automaticCompact = config.copy(enabled = false),
-        titleGenerationEnabled = false,
-    ).forCompact(config.request)
+    ): GenerationAdmissionSnapshot? = try {
+        GenerationAdmissionSnapshot(
+            conversationId = conversationId,
+            runId = "compact_preflight_${UUID.randomUUID()}",
+            selectedModelId = config.request.model,
+            config = config.generationConfig,
+            context = config.generationContext,
+            providerInstances = config.providerInstances,
+            automaticCompact = config.copy(enabled = false),
+            titleGenerationEnabled = false,
+        ).forCompact(config.request)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        DebugLog.e(
+            "ConversationCompactController",
+            "Automatic compact snapshot failed for model=${config.request.model}",
+            e,
+        )
+        null
+    }
 
     private fun GenerationAdmissionSnapshot.forCompact(
         request: CompactRequest,

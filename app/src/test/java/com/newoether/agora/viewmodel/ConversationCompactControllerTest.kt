@@ -396,6 +396,67 @@ class ConversationCompactControllerTest {
     }
 
     @Test
+    fun automaticCompactWithDeletedProviderFailsSoftInsteadOfThrowing() = runBlocking {
+        // Regression: the saved Compact model pointed at a provider that had been
+        // deleted, so GenerationAdmissionSnapshot's provider require threw out of the
+        // automatic path and killed the process on every over-threshold send.
+        val conversations = mockk<ConversationRepository>()
+        val operation = FakeCompactOperation(automaticNeeded = true)
+        val launcher = mockk<StandardGenerationContinuationLauncher>()
+        val state = ConversationGenerationState("conversation", reclaimQueuedAttachments = {})
+        val brokenConfig = automaticConfig().copy(providerInstances = emptyMap())
+
+        val result = controller(
+            conversations,
+            operation,
+            mockk(),
+            mockk(),
+            launcher,
+        ).startAutomaticBeforeSend(
+            "conversation",
+            4096,
+            brokenConfig,
+            state,
+        )
+
+        assertTrue(result is CompactResult.Failed)
+        assertEquals(
+            CompactFailureReason.SETUP_FAILED,
+            (result as CompactResult.Failed).reason,
+        )
+        io.mockk.verify(exactly = 0) { launcher.launch(any(), any()) }
+        state.dispose()
+        Unit
+    }
+
+    @Test
+    fun automaticStandardWithDeletedProviderReturnsNullInsteadOfThrowing() = runBlocking {
+        val conversations = mockk<ConversationRepository>()
+        val operation = FakeCompactOperation(automaticNeeded = true)
+        val launcher = mockk<StandardGenerationContinuationLauncher>()
+        val state = ConversationGenerationState("conversation", reclaimQueuedAttachments = {})
+        val brokenConfig = automaticConfig().copy(providerInstances = emptyMap())
+
+        val started = controller(
+            conversations,
+            operation,
+            mockk(),
+            mockk(),
+            launcher,
+        ).startAutomaticStandard(
+            conversationId = "conversation",
+            contextLimit = 4096,
+            config = brokenConfig,
+            state = state,
+        )
+
+        assertNull(started)
+        io.mockk.verify(exactly = 0) { launcher.launch(any(), any()) }
+        state.dispose()
+        Unit
+    }
+
+    @Test
     fun automaticNotNeededNeverClaimsOrLaunchesGeneration() = runBlocking {
         val conversations = mockk<ConversationRepository>()
         val operation = FakeCompactOperation(automaticNeeded = false)
