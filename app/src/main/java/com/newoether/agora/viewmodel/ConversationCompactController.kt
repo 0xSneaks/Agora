@@ -246,11 +246,16 @@ internal class ConversationCompactController(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        DebugLog.e(
-            "ConversationCompactController",
-            "Automatic compact snapshot failed for model=${config.request.model}",
-            e,
-        )
+        // Logging must never break the fail-soft path: DebugLog delegates to
+        // android.util.Log, which throws in plain JVM unit tests. Guarded the
+        // same way DebugLog's own diagnostics (sendStage/recoveryStage) are.
+        runCatching {
+            DebugLog.e(
+                "ConversationCompactController",
+                "Automatic compact snapshot failed for model=${config.request.model}",
+                e,
+            )
+        }
         null
     }
 
