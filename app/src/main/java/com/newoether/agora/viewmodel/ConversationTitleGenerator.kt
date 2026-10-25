@@ -206,14 +206,26 @@ class ConversationTitleGenerator(
         val cleaned = fallbackConversationTitle(title)
         if (cleaned.isBlank()) return Result.Failure("Provider returned an empty title")
 
+        // Ordinary conversations carry a stable " #<number>" tag (see ConversationTitleTag).
+        // Keep the number the conversation already has; a first-time title takes the current
+        // conversation count as its number. Task executions are not tagged.
+        val tagged = if (conversation.taskId == null) {
+            val number = ConversationTitleTag.numberOf(conversation.title)
+                ?: conversations.getSearchableConversationCount().takeIf { it >= 1 }
+            val base = ConversationTitleTag.baseTitle(cleaned)
+            if (number != null) ConversationTitleTag.apply(base, number) else base
+        } else {
+            cleaned
+        }
+
         if (
             conversations.updateConversationTitleIfUnchanged(
                 id = conversationId,
                 expectedTitle = conversation.title,
-                newTitle = cleaned,
+                newTitle = tagged,
             )
         ) {
-            return Result.Success(cleaned)
+            return Result.Success(tagged)
         }
         val current = conversations.getConversation(conversationId)
             ?: return Result.Failure("Conversation was deleted")
