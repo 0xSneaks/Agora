@@ -17,7 +17,7 @@ import java.util.Locale
 import kotlinx.coroutines.flow.map
 
 internal val Context.dataStore by preferencesDataStore(
-    name = "settings", produceMigrations = { listOf(modelProviderNamesMigration) },
+    name = "settings", produceMigrations = { listOf(modelProviderNamesMigration, toolCallDisplayModeMigration) },
 )
 
 class SettingsManager(private val context: Context) {
@@ -25,6 +25,7 @@ class SettingsManager(private val context: Context) {
     internal val modelPreferenceStore = SettingsModelPreferenceStore(context.dataStore, json)
     internal val backupPreferenceStore = SettingsBackupPreferenceStore(context.dataStore)
     internal val systemPromptStore = SettingsSystemPromptStore(context.dataStore, json)
+    internal val shellDeviceStore = SettingsShellDeviceStore(context.dataStore, json)
 
     companion object {
         const val DEFAULT_PROXY_HOST = "127.0.0.1"
@@ -146,6 +147,7 @@ class SettingsManager(private val context: Context) {
     val webSearchBaseUrl: Flow<String> = context.dataStore.data.map { it[WEB_SEARCH_BASE_URL] ?: "" }
 
     // ── Image generation ──────────────────────────────────────
+    val imageQuality = ImageQualitySettingsStore(context.dataStore)
     val imageGenEnabled: Flow<Boolean> = context.dataStore.data.map { it[IMAGE_GEN_ENABLED] ?: false }
     // Selected image model "Provider:modelId" (null = none chosen). Creds reused from that provider.
     val imageGenModel: Flow<String?> = context.dataStore.data.map { it[IMAGE_GEN_MODEL] }
@@ -166,12 +168,9 @@ class SettingsManager(private val context: Context) {
     val autoUpdateCheck: Flow<Boolean> = context.dataStore.data.map { it[AUTO_UPDATE_CHECK] ?: true }
     val lastUpdateCheckTime: Flow<Long> = context.dataStore.data.map { it[LAST_UPDATE_CHECK_TIME] ?: 0L }
     val localChatModels: Flow<List<LocalChatModelConfig>> = modelPreferenceStore.localChatModels
-    val localModelIdleRetentionMinutes: Flow<Int> = context.dataStore.data.map {
-        normalizeLocalModelIdleRetentionMinutes(it[LOCAL_MODEL_IDLE_RETENTION_MINUTES])
-    }
-    val localLowContextModeEnabled: Flow<Boolean> = context.dataStore.data.map {
-        it[LOCAL_LOW_CONTEXT_MODE_ENABLED] ?: DEFAULT_LOCAL_LOW_CONTEXT_MODE_ENABLED
-    }
+    val phoneUse = com.newoether.agora.phone.PhoneUseSettingsStore(context.dataStore)
+    val localModelIdleRetentionMinutes: Flow<Int> = modelPreferenceStore.localModelIdleRetentionMinutes
+    val localLowContextModeEnabled: Flow<Boolean> = modelPreferenceStore.localLowContextModeEnabled
     val customProviders: Flow<List<CustomProviderConfig>> = modelPreferenceStore.customProviders
 
     val showDocumentationFab: Flow<Boolean> = context.dataStore.data.map { it[SHOW_DOCUMENTATION_FAB] ?: true }
@@ -198,6 +197,25 @@ class SettingsManager(private val context: Context) {
     // Confirm before the model runs state-changing commands on remote shell servers. Default on.
     val shellConfirmEnabled: Flow<Boolean> = context.dataStore.data.map { it[SHELL_CONFIRM_ENABLED] ?: true }
     val askUserEnabled: Flow<Boolean> = context.dataStore.data.map { it[ASK_USER_ENABLED] ?: true }
+    val askUserTimeoutMinutes: Flow<Int> = context.dataStore.data.map { normalizeAskUserTimeoutMinutes(it[ASK_USER_TIMEOUT_MINUTES]) }
+    val todoEnabled: Flow<Boolean> = context.dataStore.data.map { it[TODO_ENABLED] ?: true }
+    val subagentToolsEnabled: Flow<Boolean> = context.dataStore.data.map { it[SUBAGENT_TOOLS_ENABLED] ?: true }
+    val subagentDeleteEnabled: Flow<Boolean> = context.dataStore.data.map { it[SUBAGENT_DELETE_ENABLED] ?: false }
+    val subagentMaxTotal: Flow<Int> = context.dataStore.data.map { normalizeSubagentMaxTotal(it[SUBAGENT_MAX_TOTAL]) }
+    val subagentMaxConcurrent: Flow<Int> = context.dataStore.data.map {
+        normalizeSubagentMaxConcurrent(it[SUBAGENT_MAX_CONCURRENT], normalizeSubagentMaxTotal(it[SUBAGENT_MAX_TOTAL]))
+    }
+    val subagentCapsuleDisplayMode: Flow<String> = context.dataStore.data.map {
+        SubagentCapsuleDisplayModes.normalize(it[SUBAGENT_CAPSULE_DISPLAY_MODE])
+    }
+    val subagentEnabledModels: Flow<Set<String>?> = modelPreferenceStore.subagentEnabledModels
+    val subagentRecommendedModel: Flow<String?> = modelPreferenceStore.subagentRecommendedModel
+    val subagentModelIds: Flow<Set<String>> = modelPreferenceStore.subagentModelIds
+    suspend fun addSubagentModels(models: Set<String>) = modelPreferenceStore.addSubagentModels(models)
+    suspend fun removeSubagentModel(model: String) = modelPreferenceStore.removeSubagentModel(model)
+    suspend fun saveSubagentEnabledModels(models: Set<String>?, merge: Boolean = false) =
+        modelPreferenceStore.saveSubagentEnabledModels(models, merge)
+    suspend fun saveSubagentRecommendedModel(model: String?) = modelPreferenceStore.saveSubagentRecommendedModel(model)
     val shellDevices: Flow<List<ShellDeviceConfig>> =
         context.dataStore.data.map { preferences -> decodeEncryptedShellDevices(preferences, json) }
     val mcpServers: Flow<List<McpServerConfig>> = context.dataStore.data.map { pref ->
@@ -515,16 +533,11 @@ class SettingsManager(private val context: Context) {
     suspend fun saveLocalChatModels(models: List<LocalChatModelConfig>) =
         modelPreferenceStore.saveLocalChatModels(models)
 
-    suspend fun saveLocalModelIdleRetentionMinutes(minutes: Int) {
-        context.dataStore.edit {
-            it[LOCAL_MODEL_IDLE_RETENTION_MINUTES] =
-                normalizeLocalModelIdleRetentionMinutes(minutes)
-        }
-    }
+    suspend fun saveLocalModelIdleRetentionMinutes(minutes: Int) =
+        modelPreferenceStore.saveLocalModelIdleRetentionMinutes(minutes)
 
-    suspend fun saveLocalLowContextModeEnabled(enabled: Boolean) {
-        context.dataStore.edit { it[LOCAL_LOW_CONTEXT_MODE_ENABLED] = enabled }
-    }
+    suspend fun saveLocalLowContextModeEnabled(enabled: Boolean) =
+        modelPreferenceStore.saveLocalLowContextModeEnabled(enabled)
 
     suspend fun saveCustomProviders(providers: List<CustomProviderConfig>) =
         modelPreferenceStore.saveCustomProviders(providers)
@@ -638,8 +651,32 @@ class SettingsManager(private val context: Context) {
     suspend fun saveAskUserEnabled(enabled: Boolean) {
         context.dataStore.edit { it[ASK_USER_ENABLED] = enabled }
     }
+    suspend fun saveAskUserTimeoutMinutes(minutes: Int) {
+        context.dataStore.edit { it[ASK_USER_TIMEOUT_MINUTES] = normalizeAskUserTimeoutMinutes(minutes) }
+    }
+    suspend fun saveTodoEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[TODO_ENABLED] = enabled }
+    }
+    suspend fun saveSubagentMaxTotal(value: Int) = saveSubagentLimits(maxTotal = value)
+    suspend fun saveSubagentMaxConcurrent(value: Int) = saveSubagentLimits(maxConcurrent = value)
+    internal suspend fun saveSubagentLimits(maxTotal: Int? = null, maxConcurrent: Int? = null) {
+        context.dataStore.edit { prefs ->
+            val previousTotal = normalizeSubagentMaxTotal(prefs[SUBAGENT_MAX_TOTAL])
+            val total = normalizeSubagentMaxTotal(maxTotal ?: previousTotal)
+            val concurrent = maxConcurrent ?: normalizeSubagentMaxConcurrent(prefs[SUBAGENT_MAX_CONCURRENT], previousTotal)
+            prefs[SUBAGENT_MAX_TOTAL] = total
+            prefs[SUBAGENT_MAX_CONCURRENT] = normalizeSubagentMaxConcurrent(concurrent, total)
+        }
+    }
+    suspend fun saveSubagentCapsuleDisplayMode(mode: String) {
+        context.dataStore.edit { it[SUBAGENT_CAPSULE_DISPLAY_MODE] = SubagentCapsuleDisplayModes.normalize(mode) }
+    }
+    suspend fun saveSubagentToolsEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[SUBAGENT_TOOLS_ENABLED] = enabled }
+    }
+    suspend fun saveSubagentDeleteEnabled(enabled: Boolean) { context.dataStore.edit { it[SUBAGENT_DELETE_ENABLED] = enabled } }
     suspend fun saveShellDevices(devices: List<ShellDeviceConfig>) {
-        context.dataStore.edit { it[SHELL_DEVICES_JSON] = com.newoether.agora.util.SecretCrypto.encrypt(json.encodeToString(devices)) }
+        context.dataStore.edit { it[SHELL_DEVICES_JSON] = encryptShellDevices(devices, json) }
     }
     suspend fun saveMcpServers(servers: List<McpServerConfig>) {
         context.dataStore.edit {

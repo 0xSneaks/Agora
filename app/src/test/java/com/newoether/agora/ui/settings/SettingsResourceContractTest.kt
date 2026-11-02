@@ -1,5 +1,9 @@
 package com.newoether.agora.ui.settings
 
+import com.newoether.agora.phone.PHONE_USE_ICON_PATH
+import com.newoether.agora.phone.PhoneUseIcon
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.vector.addPathNodes
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 import org.junit.Assert.assertEquals
@@ -10,9 +14,74 @@ import org.w3c.dom.Element
 
 class SettingsResourceContractTest {
     @Test
+    fun phoneIconGeometryMatchesNativeNotificationAndBrowser() {
+        val resources = locateResourceDirectory()
+        val vector = parse(File(resources, "drawable/ic_phone_use.xml")).documentElement
+        assertEquals(24f, vector.androidFloat("viewportWidth"), 0f)
+        assertEquals(24f, vector.androidFloat("viewportHeight"), 0f)
+        val path = vector.getElementsByTagName("path").item(0) as Element
+        assertEquals(PHONE_USE_ICON_PATH, path.getAttributeNS(ANDROID_NAMESPACE, "pathData"))
+        assertEquals("nonZero", path.getAttributeNS(ANDROID_NAMESPACE, "fillType"))
+        val nativePath = PhoneUseIcon.root[0] as androidx.compose.ui.graphics.vector.VectorPath
+        assertEquals(addPathNodes(PHONE_USE_ICON_PATH), nativePath.pathData)
+        assertEquals(PathFillType.NonZero, nativePath.pathFillType)
+        assertEquals(24f, PhoneUseIcon.viewportWidth, 0f)
+        assertEquals(24f, PhoneUseIcon.viewportHeight, 0f)
+        val browser = File(resources.parentFile, "assets/webui/icons.js").readText()
+        val browserPath = Regex("""export const ICON_MOBILE_HAND = "([^"]+)";""")
+            .find(browser)?.groupValues?.get(1)
+        assertEquals(PHONE_USE_ICON_PATH, browserPath)
+    }
+    @Test
+    fun toolCallDisplayOffersOnlyTimelineAndGroupedInEveryLocale() {
+        val resources = locateResourceDirectory()
+        val localePattern = Regex("""values(?:-[a-z]{2,3}(?:-r[A-Z]{2})?)?""")
+        val locales = resources.listFiles().orEmpty().filter {
+            it.isDirectory && localePattern.matches(it.name)
+        }
+        assertEquals(12, locales.size)
+        locales.forEach { locale ->
+            val values = readStringValues(locale)
+            assertFalse(locale.name, values.containsKey("tool_call_display_mode_compact"))
+            assertFalse(locale.name, values.containsKey("tool_call_display_mode_compact_desc"))
+            for (mode in listOf("timeline", "grouped_timeline")) {
+                assertTrue(locale.name, !values["tool_call_display_mode_$mode"].isNullOrBlank())
+                assertTrue(locale.name, !values["tool_call_display_mode_${mode}_desc"].isNullOrBlank())
+            }
+        }
+        val appearance = readSettingsSource("SettingsAppearancePage.kt")
+        val options = appearance.substringAfter("val selectedLabel = when (normalizedToolCallDisplayMode)")
+            .substringAfter("val options = listOf(").substringBefore("\n                            )")
+        assertEquals(1, Regex("ToolCallDisplayModes\\.TIMELINE").findAll(options).count())
+        assertEquals(1, Regex("ToolCallDisplayModes\\.GROUPED_TIMELINE").findAll(options).count())
+        assertEquals(2, Regex("ToolCallDisplayModes\\.").findAll(options).count())
+    }
+
+    @Test
+    fun retiredPromptGuideLabelsAreAbsentAndUnknownRowsKeepTheExistingFallback() {
+        val resources = locateResourceDirectory()
+        val localePattern = Regex("""values(?:-[a-z]{2,3}(?:-r[A-Z]{2})?)?""")
+        val locales = resources.listFiles().orEmpty().filter {
+            it.isDirectory && localePattern.matches(it.name)
+        }
+        assertEquals(12, locales.size)
+        locales.forEach { locale ->
+            val values = readStringValues(locale)
+            assertFalse(locale.name, values.keys.any { it.startsWith("template_variable_tool_guide_") })
+            assertTrue(locale.name, !values["unknown"].isNullOrBlank())
+            assertTrue(locale.name, !values["prompts_template_default_desc"].isNullOrBlank())
+        }
+        val editor = readSettingsSource("SystemPromptEditorPage.kt")
+        assertFalse(editor.contains("TOOL_GUIDE_"))
+        assertTrue(editor.contains("else -> stringResource(R.string.unknown)"))
+        assertTrue(editor.contains("onDelete = if (isPrompt) null"))
+        assertTrue(editor.contains("PredefinedVariables.EXAMPLE_VALUES"))
+    }
+
+    @Test
     fun anthropicCacheControlsFollowProviderScopeAndAppearanceInteractions() {
         val detail = readSettingsSource("SettingsProviderDetailPage.kt")
-        val gate = "if (isAnthropicProtocolProvider(currentName, customProviders))"
+        val gate = "if (supportsPromptCacheSetting(currentName, customProviders))"
         val apiKeys = readSettingsSource("ProviderApiKeysSettings.kt")
         val keysPosition = detail.indexOf("ProviderApiKeysSettings(")
         assertTrue(keysPosition >= 0 && detail.indexOf(gate) > keysPosition)
@@ -23,7 +92,12 @@ class SettingsResourceContractTest {
         assertTrue(controls.contains("Switch(checked = cacheEnabled, onCheckedChange = null)"))
         assertTrue(controls.contains("role = Role.Switch"))
         assertTrue(controls.contains("setAnthropicCacheEnabled(providerId, it)"))
-        assertTrue(controls.indexOf("if (cacheEnabled)") < controls.indexOf("R.string.provider_cache_duration"))
+        // OpenAI endpoints share the switch; only Anthropic exposes the TTL picker.
+        assertTrue(controls.contains("val cacheTtlSupported = isAnthropicProtocolProvider(currentName, customProviders)"))
+        assertTrue(
+            controls.indexOf("if (cacheEnabled && cacheTtlSupported)") in
+                0 until controls.indexOf("R.string.provider_cache_duration"),
+        )
         assertTrue(controls.contains("listOf(\"5m\", \"1h\")"))
         assertTrue(controls.contains("setAnthropicCacheTtl(providerId, ttl)"))
         assertTrue(controls.contains("Modifier.clickable { expanded = true }"))
@@ -64,6 +138,41 @@ class SettingsResourceContractTest {
                 missingKeys.isEmpty(),
             )
         }
+    }
+
+    @Test
+    fun sshKeyAndRemoteEmptyStateCopyIsLocalizedWithExpectedEnglishCasing() {
+        val resources = locateResourceDirectory()
+        val expected = linkedMapOf(
+            "shell_authentication" to "Authentication",
+            "shell_ssh_host_key" to "Host Key",
+            "shell_ssh_auth_method" to "Authentication method",
+            "shell_ssh_auth_private_key" to "Private Key",
+            "shell_ssh_import_private_key" to "Import Private Key",
+            "shell_ssh_private_key_desc" to "Import an SSH private key up to 256 KiB.",
+            "shell_ssh_private_key_passphrase" to "Key passphrase",
+            "shell_ssh_private_key_invalid" to "Invalid or unsupported SSH private key",
+            "shell_ssh_private_key_too_large" to "Private key exceeds 256 KiB",
+            "shell_ssh_private_key_read_failed" to "Could not read private key",
+            "shell_ssh_private_key_passphrase_invalid" to "Incorrect key passphrase",
+            "remote_new_chat_hint" to "Start a Conversation",
+            "remote_empty_connecting_hint" to "Connecting to Codex",
+            "remote_empty_offline_hint" to "Codex Is Offline",
+            "remote_empty_retry_hint" to "Unable to Load Conversation",
+            "remote_empty_conversation_hint" to "No Messages Yet",
+        )
+        val defaults = readStringValues(File(resources, "values"))
+        expected.forEach { (key, value) -> assertEquals(key, value, defaults[key]) }
+        val localePattern = Regex("""values-[a-z]{2,3}(?:-r[A-Z]{2})?""")
+        resources.listFiles().orEmpty()
+            .filter { it.isDirectory && localePattern.matches(it.name) }
+            .forEach { locale ->
+                val values = readStringValues(locale)
+                expected.forEach { (key, english) ->
+                    assertTrue("${locale.name}: $key", !values[key].isNullOrBlank())
+                    assertFalse("${locale.name}: $key must be translated", values[key] == english)
+                }
+            }
     }
 
     @Test
@@ -200,7 +309,6 @@ class SettingsResourceContractTest {
             "tool_call_display_mode" to "Thinking & Tool Blocks",
             "tool_call_display_mode_timeline" to "Timeline",
             "tool_call_display_mode_grouped_timeline" to "Grouped",
-            "tool_call_display_mode_compact" to "Compact",
             "thinking_segment_display_mode" to "Thinking Segments",
             "thinking_segment_display_card" to "Card",
             "thinking_segment_display_bottom_sheet" to "Bottom Sheet",

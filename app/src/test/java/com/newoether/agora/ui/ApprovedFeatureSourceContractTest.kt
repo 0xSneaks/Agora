@@ -13,6 +13,8 @@ internal class ApprovedFeatureSourceContractTest : UiSourceContractFixture() {
         val root = sourceRoot()
         val rag = source(root, "com/newoether/agora/viewmodel/RagManager.kt")
         val settings = source(root, "com/newoether/agora/ui/settings/SettingsSearchPage.kt")
+        val cacheFile = File(root, "com/newoether/agora/ui/settings/EmbeddingCacheRow.kt")
+        val cache = cacheFile.takeIf(File::isFile)?.readText() ?: settings
         val dao = source(root, "com/newoether/agora/data/local/ChatSearchDao.kt")
         val entities = source(root, "com/newoether/agora/data/local/ChatEntities.kt")
         val database = source(root, "com/newoether/agora/data/local/ChatDatabase.kt")
@@ -20,11 +22,28 @@ internal class ApprovedFeatureSourceContractTest : UiSourceContractFixture() {
         assertFalse(rag.contains("init {\n        loadCacheCounts()"))
         assertTrue(rag.contains("fun startPostList()"))
         assertTrue(rag.contains("pendingRefreshModels = models"))
-        assertTrue(rag.contains("getEmbeddingCountsByModels(configuredIds.toList())"))
-        assertTrue(rag.contains("getSemanticLedgers(configuredIds.toList())"))
+        assertTrue(rag.contains("getEmbeddingCacheCounts(configuredIds.toList())"))
+        assertTrue(rag.contains("getSemanticLedgers(listOf(modelId))"))
         assertTrue(rag.contains("getOrAdmitSemanticLedgerState"))
         assertTrue(rag.contains("getWorkInfosForUniqueWorkFlow("))
         assertTrue(rag.contains("EmbeddingCacheWorker.schedule(modelId, workManager)"))
+        assertTrue(rag.contains("suspend fun observeCachePresentation()"))
+        val presentation = rag.substringAfter("suspend fun observeCachePresentation()")
+            .substringBefore("fun loadCacheCounts()")
+        assertTrue(presentation.contains("finally {"))
+        assertTrue(presentation.contains("cachePresentationSubscribers.remove(subscriber)"))
+        assertTrue(presentation.contains("if (cachePresentationSubscribers.isEmpty())"))
+        assertTrue(presentation.contains("pendingRefreshModels = null"))
+        assertTrue(presentation.contains("cacheCountRefreshJob?.cancel()"))
+        assertTrue(presentation.contains("cacheWorkObservationJob?.cancel()"))
+        val startup = rag.substringAfter("fun startPostList()")
+            .substringBefore("suspend fun observeCachePresentation()")
+        assertFalse(startup.contains("getEmbeddingCacheCounts("))
+        assertFalse(startup.contains("loadCacheCounts()"))
+        assertTrue(rag.contains("if (cachePresentationSubscribers.isEmpty()) return"))
+        assertTrue(rag.contains("if (!snapshot.complete) {"))
+        assertTrue(rag.contains("conversations.awaitSemanticMetadataReady()"))
+        assertTrue(rag.contains("cacheCountsDirty && _cacheRows.value.none { it.value.workActive }"))
         assertFalse(rag.contains("cacheJobs"))
         assertFalse(rag.contains("runCacheLoop"))
         assertFalse(rag.contains("ExistingWorkPolicy.REPLACE"))
@@ -34,25 +53,35 @@ internal class ApprovedFeatureSourceContractTest : UiSourceContractFixture() {
         assertTrue(rag.contains("EmbeddingCacheRowReducer.workChanged"))
 
         assertTrue(settings.contains("viewModel.ragManager.cacheRows.collectAsState()") &&
-            settings.contains("LaunchedEffect(embeddingModelIds) { viewModel.ragManager.loadCacheCounts() }"))
-        assertTrue(settings.contains("EmbeddingCacheRowPhase.RECACHE"))
-        assertTrue(settings.contains("stringResource(R.string.loading_label)"))
+            settings.contains("LaunchedEffect(viewModel.ragManager, embeddingModelIds) {") &&
+            settings.contains("viewModel.ragManager.observeCachePresentation()"))
+        assertFalse(settings.contains("viewModel.ragManager.loadCacheCounts()"))
+        assertTrue(cache.contains("EmbeddingCacheRowPhase.RECACHE"))
+        assertTrue(cache.contains("stringResource(R.string.loading_label)"))
         assertFalse(settings.contains("retryCacheRow"))
         assertFalse(settings.contains("EmbeddingCacheRowSnapshot.Loading"))
         assertFalse(settings.contains("R.string.cache_work_remaining"))
-        assertTrue(settings.contains("targetState = listOfNotNull(typeLabel, cacheLabel)"))
-        assertEquals(2, settings.split("enabled = visualPhase == phase").size - 1)
-        assertTrue(settings.split("animationSpec = tween(250)").size - 1 >= 2)
-        assertTrue(settings.contains("modifier = Modifier.size(cacheActionSize)"))
-        assertTrue(settings.contains("modifier = Modifier.size(24.dp)"))
+        assertTrue(cache.contains("targetState = listOfNotNull(typeLabel,"))
+        assertEquals(2, cache.split("enabled = visualPhase == phase").size - 1)
+        assertTrue(cache.split("animationSpec = tween(250)").size - 1 >= 2)
+        assertTrue(cache.contains("modifier = Modifier.size("))
+        assertTrue(cache.contains("modifier = Modifier.size(24.dp)"))
         assertTrue(settings.contains("viewModel.ragManager.setAutoCacheEnabled"))
         assertTrue(listOf("cachingProgress", "val allCached =", "embeddingCacheActionState(")
             .none(settings::contains))
 
-        assertTrue(dao.contains("GROUP BY e.modelId"))
+        assertTrue(dao.contains("SUM(eligibleCount)"))
+        assertTrue(dao.contains("SUM(m.cachedCount)"))
+        assertTrue(dao.contains("m.modelId IN (:modelIds)"))
+        assertTrue(dao.contains("suspend fun getEmbeddingCacheCounts"))
         assertTrue(dao.contains("getEmbeddingCountsByModels"))
         assertTrue(entities.contains("Index(value = [\"modelId\"])"))
-        assertTrue(database.contains("CURRENT_VERSION = 36"))
+        assertTrue(database.contains("CURRENT_VERSION = 46"))
+        assertTrue(database.contains("MIGRATION_42_43"))
+        assertTrue(database.contains("MIGRATION_43_44"))
+        assertTrue(database.contains("MIGRATION_44_45"))
+        assertTrue(database.contains("MIGRATION_45_46"))
+        assertTrue(database.contains("MIGRATION_41_42"))
         assertTrue(database.contains("MIGRATION_23_24"))
         assertTrue(database.contains("MIGRATION_24_25"))
         assertTrue(database.contains("MIGRATION_25_26"))
@@ -88,7 +117,7 @@ internal class ApprovedFeatureSourceContractTest : UiSourceContractFixture() {
     @Test
     fun toolResultImageContextRowKeepsANonProtocolIdPrefix() {
         val root = sourceRoot()
-        val toolMessages = source(root, "com/newoether/agora/api/util/ToolMessages.kt")
+        val toolMessages = source(root, "com/newoether/agora/api/util/ToolImageProjection.kt")
 
         // The API-only image-context row must never start with a protocol prefix: provider
         // serializers branch on tool_/result_ and would silently drop the row (view_image
@@ -137,12 +166,15 @@ internal class ApprovedFeatureSourceContractTest : UiSourceContractFixture() {
         val transcription = source(root, "com/newoether/agora/viewmodel/TranscriptionManager.kt")
         val contracts = source(root, "com/newoether/agora/viewmodel/GenerationContracts.kt")
 
-        // The tool declares intent via the result flag; the executor implements one generic
-        // rule with no tool-name routing; the transcriber travels the per-generation call
-        // chain; GenerationContext stays free of function fields.
+        // Every result image follows the generation's configured transcriber, independently
+        // of tool name or the legacy opt-in flag. A partial result cannot replace the batch.
+        // GenerationContext stays free of function fields.
         assertTrue(toolProvider.contains("val transcribeImages: Boolean = false"))
         assertTrue(shell.contains("transcribeImages = true"))
-        assertTrue(executor.contains("result.transcribeImages && toolImage != null && transcriber != null"))
+        assertTrue(executor.contains("result.images.isNotEmpty() && transcriber != null"))
+        assertTrue(executor.contains("for (toolImage in result.images)"))
+        assertTrue(executor.contains("descriptions.size == result.images.size"))
+        assertFalse(executor.contains("result.transcribeImages &&"))
         assertFalse(executor.contains("\"view_image\""))
         assertFalse(executor.contains("[Image description]"))
         assertTrue(executor.contains("appendTranscriptionSegment("))
@@ -151,18 +183,18 @@ internal class ApprovedFeatureSourceContractTest : UiSourceContractFixture() {
         assertTrue(manager.contains("transcriptionManager.describeImageWithProgress("))
         assertTrue(transcription.contains("suspend fun describeImageWithProgress("))
         assertFalse(contracts.contains("toolImageTranscriber"))
-        val toolMessages = source(root, "com/newoether/agora/api/util/ToolMessages.kt")
-        assertTrue(toolMessages.contains("--- Image Transcription: view_image ---"))
+        val toolMessages = source(root, "com/newoether/agora/api/util/ToolImageProjection.kt")
+        assertTrue(toolMessages.contains("--- Image Transcription: file_view_image ---"))
         assertTrue(toolMessages.contains("transcriptionDescriptionsForBatch("))
-        // Defect pins (owner device reports): transcription-enabled models never receive raw
-        // images; the compact group title stays the transcription label while TOOL_CALLING;
-        // the thinking block always announces the transcribing state.
+        // The occurrence-aware projector removes only successfully described images. The
+        // request must retain every other image; presentation keeps its transcription state.
         val pathBuilder = source(root, "com/newoether/agora/viewmodel/GenerationApiPathBuilder.kt")
         val titles = source(
             root,
             "com/newoether/agora/ui/chat/message/ThinkingSegmentPresentation.kt",
         )
-        assertTrue(pathBuilder.contains("includeImages = !request.context.imageTranscriptionEnabled"))
+        assertTrue(pathBuilder.contains("includeImages = true"))
+        assertFalse(pathBuilder.contains("includeImages = !request.context.imageTranscriptionEnabled"))
         assertTrue(titles.contains("segs.any { it.type == \"transcription\" }"))
         assertTrue(transcription.contains("onProgress(context.getString(R.string.transcription_ellipsis_single))"))
     }
@@ -695,6 +727,7 @@ internal class ApprovedFeatureSourceContractTest : UiSourceContractFixture() {
             root,
             "com/newoether/agora/viewmodel/GenerationRequestBuilder.kt",
         )
+        val rendering = source(root, "com/newoether/agora/viewmodel/GenerationPromptRendering.kt")
         val exporter = source(root, "com/newoether/agora/data/DataExporter.kt")
         val importer = source(root, "com/newoether/agora/data/DataImporter.kt")
         val settings = source(
@@ -705,16 +738,18 @@ internal class ApprovedFeatureSourceContractTest : UiSourceContractFixture() {
         assertTrue(manager.contains("File(context.filesDir, \"skill_db\")"))
         assertTrue(manager.contains("fun catalog(): String"))
         assertFalse(manager.contains("active_skill"))
-        assertTrue(provider.contains("list_skill_files"))
-        assertTrue(provider.contains("read_skill_file"))
-        assertTrue(provider.contains("create_skill_file"))
-        assertTrue(provider.contains("edit_skill_file"))
-        assertTrue(provider.contains("delete_skill_file"))
+        assertTrue(provider.contains("skill_list"))
+        assertTrue(provider.contains("skill_read"))
+        assertTrue(provider.contains("skill_create"))
+        assertTrue(provider.contains("skill_edit"))
+        assertTrue(provider.contains("skill_delete"))
         assertFalse(provider.contains("update_active_skill"))
         assertTrue(builder.contains("skillCatalog = if (skillReadAccess) skillManager.catalog()"))
-        assertTrue(builder.contains("if (includeSkillCatalog) skillManager.catalog() else \"\""))
-        assertTrue(builder.contains("PredefinedVariables.SKILL_CATALOG to skillCatalog"))
-        assertTrue(builder.contains("skillCatalog = skillCatalogDeferred.await()"))
+        // The prompt catalog is frozen once per Run with the captured template.
+        assertTrue(builder.contains("val skillCatalog = if (settings.accessSkills.value) skillManager.catalog() else \"\""))
+        assertTrue(builder.contains(": ResolvedPrompt = resolveGenerationPromptTemplate("))
+        assertTrue(rendering.contains("PredefinedVariables.SKILL_CATALOG to skillCatalog"))
+        assertTrue(rendering.contains("skillCatalog = promptTemplate.skillCatalog"))
         assertFalse(builder.contains("effectiveSystemPromptWithSkills"))
         assertTrue(exporter.contains("memories/skill_db/"))
         assertTrue(importer.contains("memories/skill_db/"))

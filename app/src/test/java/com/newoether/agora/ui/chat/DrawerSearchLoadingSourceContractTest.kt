@@ -11,14 +11,13 @@ class DrawerSearchLoadingSourceContractTest {
     fun `keyword search uses a single SQLite LIKE escape character`() {
         val dao = source("data/local/ChatSearchDao.kt")
         val repository = source("data/repository/ConversationMessageSearch.kt")
-        val globalSearchQuery = dao
-            .substringBefore("suspend fun searchMessages")
-            .substringAfterLast("@Query(")
-        val kotlinEncodedSingleBackslashEscape = """ESCAPE '\\'"""
-        val kotlinEncodedDoubleBackslashEscape = """ESCAPE '\\\\'"""
+        val globalSearchQuery = dao.substringAfter("KEYWORD_MESSAGE_PROJECTION = \"\"\"")
+            .substringBefore("\"\"\"")
+        val singleBackslashEscape = """ESCAPE '\'"""
+        val doubleBackslashEscape = """ESCAPE '\\'"""
 
-        assertEquals(2, globalSearchQuery.count(kotlinEncodedSingleBackslashEscape))
-        assertFalse(globalSearchQuery.contains(kotlinEncodedDoubleBackslashEscape))
+        assertEquals(2, globalSearchQuery.count(singleBackslashEscape))
+        assertFalse(globalSearchQuery.contains(doubleBackslashEscape))
         assertTrue(
             repository.contains(
                 """query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")""",
@@ -38,7 +37,10 @@ class DrawerSearchLoadingSourceContractTest {
         val searchBar = source("ui/chat/search/DrawerSearchBar.kt")
         val searchResultItem = source("ui/chat/search/ChatSearchResultItem.kt")
 
-        assertTrue(dao.contains("SELECT id, title, systemPromptId, modelId, taskId, origin, graduated, hasUnreadGeneration, isPinned, selectedBranchesJson FROM conversations"))
+        assertTrue(dao.contains("SELECT id, title, systemPromptId, modelId, taskId, origin, graduated, hasUnreadGeneration, isPinned, NULL AS selectedBranchesJson, parentConversationId FROM conversations"))
+        assertTrue(dao.contains("WHERE taskId IS NULL AND parentConversationId IS NULL ORDER BY lastUpdated DESC"))
+        assertTrue(dao.contains("WHERE taskId IS NULL AND parentConversationId IS NULL ORDER BY isPinned DESC"))
+        assertTrue(dao.contains("WHERE taskId IS NULL AND parentConversationId IS NULL AND id IN (:ids)"))
         assertTrue(dao.contains("fun getAllConversations(): Flow<List<ChatConversation>>"))
         assertFalse(dao.contains("SELECT * FROM conversations WHERE taskId IS NULL ORDER BY lastUpdated DESC"))
         assertTrue(repository.contains("fun getAllConversations(): Flow<List<ChatConversation>> = chatDao.getAllConversations()"))
@@ -55,6 +57,10 @@ class DrawerSearchLoadingSourceContractTest {
         assertTrue(
             drawer.contains("targetState = search.results.takeIf { search.isActive }"),
         )
+        assertTrue(drawer.contains("?.filter { \"conversation:\${it.first.conversationId}\" in conversationsByKey }"))
+        assertTrue(drawer.contains("val isSelected = conversation.id == drawerConversationId"))
+        assertTrue(drawer.contains("if (!isSelected) viewModel.selectConversation(conversation.id)"))
+        assertTrue(drawer.contains("if (convId != drawerConversationId) viewModel.selectConversation(convId)"))
         assertTrue(drawer.contains("animationSpec = tween(180)"))
         assertTrue(drawer.contains("label = \"DrawerConversationContentTransition\""))
         assertTrue(drawer.split("rememberLazyListState()").size - 1 == 2)

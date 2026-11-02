@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,12 +42,14 @@ import com.newoether.agora.ui.components.latexSourceForLink
 import com.newoether.agora.ui.chat.caseInsensitiveMatchRanges
 import com.newoether.agora.ui.chat.visibleMarkdownMatchRanges
 import com.newoether.agora.ui.theme.ChatType
+import com.mikepenz.markdown.compose.LocalMarkdownColors
 import com.mikepenz.markdown.compose.LocalMarkdownDimens
 import com.mikepenz.markdown.compose.LocalMarkdownPadding
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
 import com.mikepenz.markdown.model.markdownPadding
 import com.mikepenz.markdown.model.MarkdownColors
+import com.mikepenz.markdown.model.MarkdownDimens
 import com.mikepenz.markdown.model.MarkdownPadding
 import com.mikepenz.markdown.model.MarkdownTypography
 import com.mikepenz.markdown.compose.MarkdownElement
@@ -192,18 +195,8 @@ internal fun rememberChatMarkdownAssets(
         textLink = linkTextStyles,
         table = thoughtMarkdownBodyStyle,
     )
-    val fg = MaterialTheme.colorScheme.onBackground
-    val bg = MaterialTheme.colorScheme.surface
-    // Composite fg at 0.1 alpha over bg to produce the exact opaque equivalent
-    val codeBg = remember(fg, bg) {
-        Color(
-            red   = fg.red   * 0.1f + bg.red   * 0.9f,
-            green = fg.green * 0.1f + bg.green * 0.9f,
-            blue  = fg.blue  * 0.1f + bg.blue  * 0.9f,
-        )
-    }
     val customMarkdownColors = markdownColor(
-        codeBackground = codeBg,
+        codeBackground = MaterialTheme.colorScheme.surfaceContainerLow,
         inlineCodeBackground = Color.Transparent,
     )
     val customMarkdownPadding = markdownPadding(block = 8.dp)
@@ -380,9 +373,9 @@ internal fun rememberChatMarkdownAssets(
                         highlightColor = searchHighlightColor,
                         activeHighlightColor = activeSearchHighlightColor,
                     )
-                } else {
-                    // Installing a custom component makes the dependency consider every unknown
-                    // node handled. Preserve its normal recursive fallback for non-HTML nodes.
+                } else if (type != MarkdownElementTypes.LINK_DEFINITION) {
+                    // Definitions are document metadata. Preserve recursive fallback for other
+                    // unknown nodes without rendering a nested definition's label or destination.
                     model.node.children.forEach { child ->
                         MarkdownElement(
                             node = child,
@@ -401,12 +394,14 @@ internal fun rememberChatMarkdownAssets(
     val thoughtMarkdownComponents = customMarkdownComponents
 
     val latexTextSize = with(LocalDensity.current) { 20.sp.toPx() }
-    val latexImageTransformer = remember(textColor, inlineImages, onMediaClick, latexTextSize) {
+    val shellMedia = LocalShellMarkdownMedia.current
+    val latexImageTransformer = remember(textColor, inlineImages, onMediaClick, latexTextSize, shellMedia) {
         LatexImageTransformer(
             textSize = latexTextSize,
             color = textColor.toArgb(),
             inlineImages = inlineImages,
             onMediaClick = onMediaClick,
+            shellMedia = shellMedia,
         )
     }
     val markdownFlavour = remember { GFMFlavourDescriptor() }
@@ -485,8 +480,35 @@ internal fun rememberChatMarkdownAssets(
  * This renders raw code directly rather than synthesizing a Markdown fence, so commands that
  * contain backticks can never terminate or corrupt the surrounding block.
  */
+/**
+ * MarkdownTable draws the GFM delimiter row as a MarkdownDivider using dividerColor. A 0dp
+ * thickness would still render as a hairline, so the divider is made transparent instead.
+ * Table cells only hold inline content, so no other divider lives inside this scope.
+ * Both table paths retain their existing layout and share the code shell's 24 dp corners.
+ */
 @Composable
-private fun OverflowFriendlyMarkdownTable(model: MarkdownComponentModel) {
+private fun WithoutTableHeaderDivider(content: @Composable () -> Unit) {
+    val base = LocalMarkdownColors.current
+    val colors = remember(base) {
+        object : MarkdownColors by base {
+            override val dividerColor: Color = Color.Transparent
+        }
+    }
+    val baseDimens = LocalMarkdownDimens.current
+    val dimens = remember(baseDimens) {
+        object : MarkdownDimens by baseDimens {
+            override val tableCornerSize = 24.dp
+        }
+    }
+    CompositionLocalProvider(
+        LocalMarkdownColors provides colors,
+        LocalMarkdownDimens provides dimens,
+        content = content,
+    )
+}
+
+@Composable
+private fun OverflowFriendlyMarkdownTable(model: MarkdownComponentModel) = WithoutTableHeaderDivider {
     MarkdownTable(
         content = model.content,
         node = model.node,
@@ -520,7 +542,7 @@ internal fun SearchHighlightedMarkdownTable(
     spec: SearchHighlightSpec? = null,
     highlightColor: Color = SearchHighlightBackground,
     activeHighlightColor: Color = ActiveSearchHighlightBackground,
-) {
+) = WithoutTableHeaderDivider {
     MarkdownTable(
         content = model.content,
         node = model.node,

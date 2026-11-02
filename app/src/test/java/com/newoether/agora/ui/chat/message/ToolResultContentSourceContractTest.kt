@@ -247,6 +247,8 @@ class ToolResultContentSourceContractTest {
         assertTrue(defaults.keys.containsAll(listOf(
             "tool_read_active_memory", "tool_reading_active_memory", "tool_read_active_memory_success",
             "tool_read_active_memory_empty", "tool_read_active_memory_failed",
+            "tool_list_mcp_servers", "tool_listing_mcp_servers", "tool_listed_mcp_servers_default",
+            "tool_no_mcp_servers_returned", "tool_list_mcp_servers_failed",
         )))
         resources.forEach { (directory, values) ->
             assertEquals("$directory keys", defaults.keys, values.keys)
@@ -260,14 +262,15 @@ class ToolResultContentSourceContractTest {
             values.filterKeys { key ->
                 key.startsWith("tool_progress_") ||
                     key.endsWith("ing_skill_subject") ||
-                    key == "tool_listing_skills" || key == "tool_reading_active_memory"
+                    key == "tool_listing_skills" || key == "tool_reading_active_memory" ||
+                    key == "tool_listing_mcp_servers"
             }.forEach { (key, value) ->
                 assertFalse("$directory $key uses ASCII ellipsis", value.contains("..."))
             }
             val document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
                 .parse(File(resourceRoot, "$directory/tool_presentation_strings.xml"))
             val plurals = document.getElementsByTagName("plurals")
-            assertEquals("$directory quantity keys", 18, plurals.length)
+            assertEquals("$directory quantity keys", 20, plurals.length)
             val quantityKeys = mutableSetOf<String>()
             repeat(plurals.length) { index ->
                 val node = plurals.item(index)
@@ -290,6 +293,7 @@ class ToolResultContentSourceContractTest {
                 assertTrue("$directory $key missing other", hasOther)
             }
             assertEquals("$directory quantity key parity", setOf(
+                "tool_listed_mcp_servers", "tool_found_mcp_tools",
                 "tool_lookup_count", "tool_listed_skills", "tool_web_search_done", "tool_web_search_result_count",
                 "tool_conversation_search_done_default", "tool_conversation_search_done_for", "tool_listed_conversations",
                 "tool_shell_list_count", "tool_shell_job_count", "tool_found_files", "tool_searched_file",
@@ -314,6 +318,35 @@ class ToolResultContentSourceContractTest {
             "tool_found_matches_default",
         ).forEach { key -> assertTrue("Missing unknown-count fallback $key", source.contains(key)) }
     }
+    @Test
+    fun `Remote file operation labels exist once across each locale directory`() {
+        val root = locateResourceRoot()
+        val keys = listOf("tool_edit_operation_update", "tool_edit_operation_add",
+            "tool_edit_operation_delete", "tool_edit_operation_move")
+        val defaults = parseStrings(File(root, "values/tool_presentation_strings.xml"))
+        val directories = root.listFiles().orEmpty().filter { it.isDirectory &&
+            (it.name == "values" || it.name.matches(Regex("values-[a-z]{2}(-r[A-Z]{2})?"))) }
+        assertEquals(12, directories.size)
+        directories.forEach { directory ->
+            val entries = directory.listFiles().orEmpty().filter { it.extension == "xml" }
+                .flatMap { file ->
+                    val nodes = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)
+                        .getElementsByTagName("string")
+                    (0 until nodes.length).map { index -> nodes.item(index).let { node ->
+                        node.attributes.getNamedItem("name").nodeValue to node.textContent
+                    } }
+                }.groupBy({ it.first }, { it.second })
+            assertTrue("${directory.name} aggregation was empty", entries.size > 1000)
+            keys.forEach { key ->
+                val values = entries[key].orEmpty()
+                assertEquals("${directory.name} $key missing or duplicated", 1, values.size)
+                assertTrue("${directory.name} $key empty", values.single().isNotBlank())
+                assertEquals(placeholders(defaults.getValue(key)), placeholders(values.single()))
+            }
+        }
+        assertEquals(listOf("Update", "Add", "Delete", "Move"), keys.map { defaults.getValue(it) })
+    }
+
     private fun parseStrings(file: File): Map<String, String> {
         val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)
         val nodes = document.getElementsByTagName("string")
