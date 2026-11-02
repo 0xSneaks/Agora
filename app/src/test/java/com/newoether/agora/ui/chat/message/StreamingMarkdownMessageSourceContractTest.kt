@@ -218,13 +218,31 @@ class StreamingMarkdownMessageSourceContractTest {
         assertTrue(citation.contains("val unsupported by lazy(LazyThreadSafetyMode.NONE)"))
         assertTrue(citation.contains("boundedTrailingCitationWrapperStart("))
         assertTrue(citation.contains("PlainCitationArtifact.findAll(answerText)"))
-        assertTrue(citation.contains("CitationPolicy.stripPrivateMarkers(projection.markdown)"))
+        assertTrue(citation.contains("CitationPolicy.stripPrivateMarkers(projection.markdown, positions)"))
         val projectionPolicy = citation.substringAfter("internal fun citationMarkdownProjection(")
             .substringBefore("internal fun citationRecordsForAnswerSlice(")
         assertTrue(projectionPolicy.indexOf("if (isStreaming)") <
-            projectionPolicy.indexOf("projectCitationMarkdown(answerText, citations)"))
+            projectionPolicy.indexOf("projectCitationMarkdown(answerText, citations, includeSourcePositions)"))
+        assertTrue(projectionPolicy.contains("projection.sourcePositions.toMutableList()"))
+        assertTrue(projectionPolicy.contains("sourcePositions = positions.orEmpty()"))
         assertTrue(projectionPolicy.contains("markers = emptyList()"))
         assertFalse((citation + presentation).contains("answerText.lastIndexOf(\"([\")"))
+    }
+
+    @Test
+    fun `all native Markdown roots share definition projection and document reference ownership`() {
+        val root = locateMainSourceRoot()
+        val normal = source(root, "MessageItemMarkdown.kt")
+        val incremental = source(root, "IncrementalStreamingMarkdown.kt")
+        val references = source(root, "MarkdownDocumentReferences.kt")
+        assertEquals(2, Regex("markdownVisibleBlocks\\(state.node\\)").findAll(normal).count())
+        assertTrue(incremental.contains("markdownVisibleBlocks(root, preserveTrailingSpacing)"))
+        listOf(normal, incremental).forEach { assertTrue(it.contains("MarkdownDocumentReferenceHandler(")) }
+        assertTrue(incremental.contains("stableReferences.putIfAbsent(label, destination)"))
+        assertTrue(incremental.contains("liveReferences = markdownReferenceDefinitions(root, tail)"))
+        assertTrue(references.contains("ASTNode by original"))
+        assertFalse(references.contains("buildMarkdownTreeFromString"))
+        assertFalse(references.contains("Regex("))
     }
 
     @Test

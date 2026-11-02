@@ -75,8 +75,13 @@ sealed class StreamEvent {
     ) : StreamEvent()
     data class ToolCallsRequest(val calls: List<ToolCallRequest>) : StreamEvent()
     /** Emitted before one provider retry. [attempt] is the 1-based retry number, while
-     *  [maxAttempts] is the retry budget and excludes the initial request. */
-    data class Retrying(val attempt: Int, val maxAttempts: Int) : StreamEvent()
+     *  [maxAttempts] is the retry budget and excludes the initial request.
+     *  [resetCurrentAttempt] replaces only this request's failed partial output. */
+    data class Retrying(
+        val attempt: Int,
+        val maxAttempts: Int,
+        val resetCurrentAttempt: Boolean = false,
+    ) : StreamEvent()
 }
 
 data class ProviderRequestInput(
@@ -91,8 +96,8 @@ fun interface ProviderRequestResolver {
     ): ProviderRequestInput
 }
 
-suspend fun ProviderConfig.resolveRequest(messages: List<ChatMessage>): ProviderRequestInput =
-    requestResolver?.resolve(messages, this)
+suspend fun ProviderConfig.resolveRequest(messages: List<ChatMessage>): ProviderRequestInput {
+    val resolved = requestResolver?.resolve(messages, this)
         ?: ProviderRequestInput(
             messages = prepareMessages(
                 messages,
@@ -104,6 +109,9 @@ suspend fun ProviderConfig.resolveRequest(messages: List<ChatMessage>): Provider
             ),
             systemPrompt = systemPrompt,
         )
+    // Custom request resolvers must obey the same wire-name compatibility boundary.
+    return resolved.copy(messages = com.newoether.agora.api.util.canonicalToolNames(resolved.messages))
+}
 
 data class ProviderConfig(
     val apiKey: String,
@@ -192,6 +200,7 @@ data class OpenAiChatRequest(
     @SerialName("thinking") val thinking: OpenAiThinking? = null,
     @SerialName("enable_thinking") val enableThinking: Boolean? = null,
     @SerialName("thinking_budget") val thinkingBudget: Int? = null,
+    @SerialName("chat_template_kwargs") val chatTemplateKwargs: JsonObject? = null,
     val reasoning: OpenAiReasoning? = null,
     /** Groq: `false` returns no reasoning for a model that cannot turn reasoning off. */
     @SerialName("include_reasoning") val includeReasoning: Boolean? = null,
@@ -236,6 +245,9 @@ data class OpenAiResponsesRequest(
     val stream: Boolean = true,
     val tools: List<OpenAiResponseTool>? = null,
     val reasoning: OpenAiReasoning? = null,
+    @SerialName("chat_template_kwargs") val chatTemplateKwargs: JsonObject? = null,
+    @SerialName("reasoning_effort") val reasoningEffort: String? = null,
+    @SerialName("thinking_budget") val thinkingBudget: Int? = null,
     @SerialName("service_tier") val serviceTier: String? = null,
     val temperature: Float? = null,
     @SerialName("max_output_tokens") val maxOutputTokens: Int? = null,
@@ -398,7 +410,8 @@ data class OpenAiContentPart(
 
 @Serializable
 data class OpenAiImageUrl(
-    val url: String
+    val url: String,
+    val detail: String? = null,
 )
 
 

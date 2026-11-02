@@ -17,6 +17,11 @@ import com.newoether.agora.data.replaceCustomProviderIdsForDisplay
 
 
 import com.newoether.agora.data.repository.ConversationRepository
+import com.newoether.agora.data.repository.observeConversationTodo
+import com.newoether.agora.data.repository.observeDrawerGeneratingConversationIds
+import com.newoether.agora.ui.chat.observeDrawerInteractions
+import com.newoether.agora.data.repository.observeSubagents
+import com.newoether.agora.data.repository.observeParentConversationId
 import com.newoether.agora.data.repository.ConversationSettingsTransferCoordinator
 import com.newoether.agora.data.repository.SettingsRepository
 import com.newoether.agora.model.ChatConversation
@@ -84,14 +89,23 @@ class ChatViewModel(
     )
     internal val messagePayloadHydration =
         ConversationMessagePayloadHydration(convRepo, appContext)
+    /** Display-only `shell://` Markdown images for native chat, read from the live device settings. */
+    internal val shellMarkdownMedia = com.newoether.agora.ui.chat.message.ShellMarkdownMedia(
+        context = appContext,
+        devices = { settingsRepository.shellDevices.value },
+        sandboxEnabled = { settingsRepository.sandboxEnabled.value },
+        sandbox = { sandboxFactory?.takeIf { it.isAvailable() }?.create() },
+    )
+    private val attachmentProcessor = AttachmentImportProcessor(application)
     private val composerDrafts = ComposerDraftController(
         persistence = conversationWorkspaces,
         conversations = conversationRepository,
+        hydrateAttachment = attachmentProcessor::hydrateDraftAttachment,
     )
     internal val conversationComposer = ConversationComposerController(
         scope = viewModelScope,
         drafts = composerDrafts,
-        processor = AttachmentImportProcessor(application),
+        processor = attachmentProcessor,
         sandboxHomeDir = {
             sandboxFactory?.takeIf { it.isAvailable() }?.let {
                 File(application.filesDir, "sandbox-home")
@@ -254,6 +268,35 @@ class ChatViewModel(
     val conversations: StateFlow<List<ChatConversation>?> = convRepo.getAllConversations()
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
     val currentConversationId: StateFlow<String?> get() = selectionController.currentConversationId
+    internal val currentSubagentFamily = observeSelectedSubagentFamily(
+        selectedConversationId = currentConversationId,
+        observeParent = convRepo::observeParentConversationId,
+        observeSubagents = convRepo::observeSubagents,
+    ).stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        SubagentFamilySnapshot(),
+    )
+    val currentSubagents = combine(currentConversationId, currentSubagentFamily) { id, family ->
+        id to family.forSelection(id)?.agents.orEmpty()
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(0, replayExpirationMillis = 0),
+        null to emptyList(),
+    )
+
+    private val subagentDeliveryOnOpen = viewModelScope.launch {
+        currentConversationId.collect { id -> id?.let(chatRuntime.onConversationOpened) }
+    }
+
+    val currentConversationTodo = observeSelectedConversationTodo(
+        currentConversationId, convRepo::observeConversationTodo,
+    ).stateIn(viewModelScope, SharingStarted.Eagerly, null to emptyList())
+    private val currentInteractions = combine(
+        currentConversationId, askUser.requests, shellConfirmation.pendingShellCommand,
+    ) { id, questions, shell ->
+        id to com.newoether.agora.ui.chat.interaction.userInteractions(id, questions, shell)
+    }
     val selectedConversationGenerationSnapshot: StateFlow<ConversationGenerationSnapshot>
         get() = selectionController.selectedConversationGenerationSnapshot
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -349,16 +392,21 @@ class ChatViewModel(
         override fun showShareText(text: String) {
             _conversationShareText.tryEmit(text)
         }
-        override fun settleDeletedConversation(conversationId: String) =
-            selectionController.settleDeletedSelectedConversation(conversationId)
+        override fun settleDeletedConversation(conversationId: String, parentConversationId: String?) =
+            selectionController.settleDeletedSelectedConversation(conversationId, parentConversationId)
         override fun isSubmissionFrozen(conversationId: String): Boolean =
             conversationComposerSubmission.isFrozen(conversationId)
         override fun onGenerationActivityChanged(conversationId: String, active: Boolean) =
             if (active) conversationUi.markActive(conversationId) else conversationUi.markIdle(conversationId)
     }
     val allMessages: StateFlow<List<ChatMessage>> = conversationUi.allMessages
-    val loadedMessagesConversationId: StateFlow<String?> =
-        conversationUi.loadedMessagesConversationId
+    val loadedMessagesConversationId: StateFlow<String?> = observeConversationContentReadiness(
+        selectedConversationId = currentConversationId,
+        loadedMessagesConversationId = conversationUi.loadedMessagesConversationId,
+        todo = currentConversationTodo,
+        family = currentSubagentFamily,
+        interactions = currentInteractions,
+    ).stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val providerModelSync = ProviderModelSyncController(
         providers = providerRegistry,
@@ -420,15 +468,15 @@ class ChatViewModel(
     val generationSnapshot: StateFlow<ConversationGenerationSnapshot> =
         conversationUi.generationSnapshot
 
-    /** Every conversation currently mutating its message tree through foreground generation or
-     * headless Task/Loop execution. Drawer rows use this per-id set instead of the open
-     * conversation's open UI loading mirror. */
-    val generatingConversationIds: StateFlow<Set<String>> = combine(
-        generationRegistry.activeConversationIds,
-        conversationExecutionCoordinator.activeAutomationConversationIds,
-    ) { foreground, automation ->
-        foreground + automation
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+    /** Drawer activity includes each active conversation and the parent of any active Subagent. */
+    val generatingConversationIds: StateFlow<Set<String>> = convRepo.observeDrawerGeneratingConversationIds(
+        foregroundIds = generationRegistry.activeConversationIds,
+        automationIds = conversationExecutionCoordinator.activeAutomationConversationIds,
+    ).stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
+    internal val drawerInteractions = convRepo.observeDrawerInteractions(
+        askUser.requests, shellConfirmation.pendingShellCommand,
+    ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     val isSwitching: StateFlow<Boolean> get() = selectionController.isSwitching
 
@@ -469,6 +517,7 @@ class ChatViewModel(
     private val contextProjector by lazy {
         ConversationContextProjector(
             conversations = convRepo,
+            appContext = appContext,
             requestBuilder = chatRuntime.requestBuilder,
             generationManager = { generationManager },
             generationErrorFormatter = { raw ->
@@ -481,6 +530,8 @@ class ChatViewModel(
 
     internal val conversationContextProjection: StateFlow<ConversationContextProjection>
         get() = contextProjector.projection
+    internal val conversationContextInvalidationRevision: StateFlow<Long>
+        get() = contextProjector.invalidationRevision
 
     internal fun requestConversationContext(
         conversationId: String?,

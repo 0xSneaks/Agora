@@ -16,6 +16,7 @@ import java.util.UUID
 internal data class StandardCompactLaunch(
     val messageId: String,
     val job: Job,
+    val uiToken: Long,
 )
 
 /**
@@ -68,6 +69,7 @@ internal class ConversationCompactController(
         config: AutomaticCompactConfig,
         state: ConversationGenerationState,
         alreadyHoldsConversationLock: Boolean = false,
+        continuesAfterSuccess: Boolean = false,
     ): StandardCompactLaunch? {
         if (!operation.automaticNeeded(conversationId, contextLimit, config)) return null
         val snapshot = automaticSnapshot(conversationId, config) ?: return null
@@ -79,6 +81,7 @@ internal class ConversationCompactController(
             awaitCompletion = false,
             touchConversationOnAdmission = false,
             alreadyHoldsConversationLock = alreadyHoldsConversationLock,
+            continuesAfterSuccess = continuesAfterSuccess,
         ).first
     }
 
@@ -124,6 +127,7 @@ internal class ConversationCompactController(
         awaitCompletion: Boolean,
         touchConversationOnAdmission: Boolean,
         alreadyHoldsConversationLock: Boolean = false,
+        continuesAfterSuccess: Boolean = false,
     ): Pair<StandardCompactLaunch?, CompactResult> {
         val topology = conversations.getProviderContextTopologySnapshot(conversationId)
             ?: return null to CompactResult.NotNeeded
@@ -176,6 +180,7 @@ internal class ConversationCompactController(
                 touchConversationOnAdmission = touchConversationOnAdmission,
                 alreadyHoldsConversationLock = alreadyHoldsConversationLock,
                 queueDrainRequiresSuccess = true,
+                continuesAfterSuccess = continuesAfterSuccess,
                 transformFinalText = transform,
             ),
             state,
@@ -186,7 +191,7 @@ internal class ConversationCompactController(
             return null to CompactResult.Failed(CompactFailureReason.GENERATION_NOT_STARTED)
         }
         onCompactStarted(conversationId, messageId)
-        val compactLaunch = StandardCompactLaunch(messageId, launched.job)
+        val compactLaunch = StandardCompactLaunch(messageId, launched.job, launched.uiToken)
         if (!awaitCompletion) return compactLaunch to CompactResult.Created(messageId)
 
         try {
@@ -288,6 +293,9 @@ internal class ConversationCompactController(
             thinkingEnabled = false,
         ),
         context = context.copy(
+            phoneEnabled = false,
+            todoEnabled = false,
+            subagentToolsEnabled = false,
             accessSavedMemories = false,
             accessActiveMemory = false,
             skillReadAccess = false,
